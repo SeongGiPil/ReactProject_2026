@@ -60,11 +60,8 @@ router.get("/:postId", jwtAuthentication, async (req, res) => {
     }
 
 });
-
-
 // 좋아요 등록
 router.post("/", jwtAuthentication, async (req, res) => {
-
     const { postId } = req.body;
     const userId = req.user.userId;
 
@@ -72,6 +69,25 @@ router.post("/", jwtAuthentication, async (req, res) => {
 
     try {
         conn = await db.getConnection();
+
+        // 이미 좋아요 했는지 확인
+        const check = await conn.execute(
+            `
+            SELECT LIKE_ID
+            FROM POST_LIKE
+            WHERE POST_ID = :postId
+            AND USER_ID = :userId
+            `,
+            { postId, userId },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        if (check.rows.length > 0) {
+            return res.json({
+                success: false,
+                message: "이미 좋아요를 눌렀습니다."
+            });
+        }
 
         await conn.execute(
             `
@@ -118,66 +134,5 @@ router.post("/", jwtAuthentication, async (req, res) => {
     } finally {
         if (conn) await conn.close();
     }
-
 });
-
-
-// 좋아요 취소
-router.delete("/:postId", jwtAuthentication, async (req, res) => {
-
-    const { postId } = req.params;
-    const userId = req.user.userId;
-
-    let conn;
-
-    try {
-        conn = await db.getConnection();
-
-        const result = await conn.execute(
-            `
-            DELETE FROM POST_LIKE
-            WHERE POST_ID = :postId
-            AND USER_ID = :userId
-            `,
-            { postId, userId }
-        );
-
-        if (result.rowsAffected > 0) {
-            await conn.execute(
-                `
-                UPDATE POST
-                SET LIKE_CNT = CASE 
-                    WHEN LIKE_CNT > 0 THEN LIKE_CNT - 1 
-                    ELSE 0 
-                END
-                WHERE POST_ID = :postId
-                `,
-                { postId }
-            );
-        }
-
-        await conn.commit();
-
-        res.json({
-            success: true,
-            message: "좋아요 취소 완료"
-        });
-
-    } catch (err) {
-        console.log(err);
-
-        if (conn) await conn.rollback();
-
-        res.status(500).json({
-            success: false,
-            message: "좋아요 취소 실패"
-        });
-
-    } finally {
-        if (conn) await conn.close();
-    }
-
-});
-
-
 module.exports = router;

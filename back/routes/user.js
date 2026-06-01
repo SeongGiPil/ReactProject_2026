@@ -402,6 +402,57 @@ router.post(
 
     }
 );
+// 마이페이지 통계 조회
+router.get("/stats/:userId", async (req, res) => {
+    const { userId } = req.params;
+
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        const result = await conn.execute(
+            `
+            SELECT
+                (SELECT COUNT(*)
+                 FROM POST
+                 WHERE USER_ID = :userId
+                 AND POST_STATUS = 'NORMAL') AS POST_CNT,
+
+                (SELECT COUNT(*)
+                 FROM POST_COMMENT
+                 WHERE USER_ID = :userId
+                 AND COMMENT_STATUS = 'NORMAL') AS COMMENT_CNT,
+
+                (SELECT NVL(SUM(LIKE_CNT), 0)
+                 FROM POST
+                 WHERE USER_ID = :userId
+                 AND POST_STATUS = 'NORMAL') AS TOTAL_LIKE_CNT
+            FROM DUAL
+            `,
+            { userId },
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
+        );
+
+        res.json({
+            success: true,
+            info: result.rows[0]
+        });
+
+    } catch (err) {
+        console.log("마이페이지 통계 조회 에러 :", err);
+
+        res.status(500).json({
+            success: false,
+            message: "통계 조회 실패"
+        });
+
+    } finally {
+        if (conn) await conn.close();
+    }
+});
 
 
 module.exports = router;

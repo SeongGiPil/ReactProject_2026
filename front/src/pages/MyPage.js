@@ -9,11 +9,15 @@ function MyPage() {
 
     const [myPostList, setMyPostList] = useState([]);
 
-    // 전체 팀 목록
     const [teamList, setTeamList] = useState([]);
-
-    // 내가 선택한 응원팀 ID 목록
     const [selectedTeams, setSelectedTeams] = useState([]);
+
+    // 활동 통계
+    const [stats, setStats] = useState({
+        POST_CNT: 0,
+        COMMENT_CNT: 0,
+        TOTAL_LIKE_CNT: 0
+    });
 
     function fnTypeName(type) {
         if (type === "FREE") return "자유글";
@@ -23,7 +27,6 @@ function MyPage() {
         return type;
     }
 
-    // 회원정보 조회
     function fnGetUser() {
         const loginUser = JSON.parse(localStorage.getItem("user"));
 
@@ -42,7 +45,6 @@ function MyPage() {
             });
     }
 
-    // 내 게시글 조회
     function fnGetMyPost() {
         const token = localStorage.getItem("token");
         const decoded = jwtDecode(token);
@@ -57,7 +59,6 @@ function MyPage() {
             .catch(err => console.log(err));
     }
 
-    // 전체 팀 목록 조회
     function fnGetTeamList() {
         fetch("http://localhost:3010/team/list")
             .then(res => res.json())
@@ -72,7 +73,6 @@ function MyPage() {
             });
     }
 
-    // 내 응원팀 조회
     function fnGetMyTeam() {
         const loginUser = JSON.parse(localStorage.getItem("user"));
 
@@ -87,7 +87,19 @@ function MyPage() {
             .catch(err => console.log(err));
     }
 
-    // 응원팀 체크/해제
+    function fnGetStats() {
+        const loginUser = JSON.parse(localStorage.getItem("user"));
+
+        fetch("http://localhost:3010/user/stats/" + loginUser.USER_ID)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setStats(data.info);
+                }
+            })
+            .catch(err => console.log(err));
+    }
+
     function fnTeamCheck(teamId) {
         if (selectedTeams.includes(teamId)) {
             setSelectedTeams(
@@ -101,7 +113,6 @@ function MyPage() {
         }
     }
 
-    // 응원팀 변경 저장
     function fnUpdateTeam() {
         fetch("http://localhost:3010/team/update-user-team", {
             method: "POST",
@@ -127,7 +138,6 @@ function MyPage() {
             });
     }
 
-    // 회원정보 수정
     function fnUpdate() {
         fetch("http://localhost:3010/user/update", {
             method: "PUT",
@@ -157,7 +167,6 @@ function MyPage() {
             });
     }
 
-    // 프로필 이미지 업로드
     function fnProfileUpload() {
         if (!profileFile) {
             alert("이미지를 선택하세요.");
@@ -199,6 +208,7 @@ function MyPage() {
         fnGetMyPost();
         fnGetTeamList();
         fnGetMyTeam();
+        fnGetStats();
     }, []);
 
     return (
@@ -272,6 +282,42 @@ function MyPage() {
                     <button className="update-btn" onClick={fnUpdate}>
                         수정하기
                     </button>
+                </div>
+            </div>
+
+            <div className="mypage-card">
+                <h3 className="section-title">활동 통계</h3>
+
+                <div className="stats-box">
+                    <div className="stats-card">
+                        <div className="stats-icon">📝</div>
+                        <div className="stats-value">
+                            {stats.POST_CNT}
+                        </div>
+                        <div className="stats-title">
+                            게시글
+                        </div>
+                    </div>
+
+                    <div className="stats-card">
+                        <div className="stats-icon">💬</div>
+                        <div className="stats-value">
+                            {stats.COMMENT_CNT}
+                        </div>
+                        <div className="stats-title">
+                            댓글
+                        </div>
+                    </div>
+
+                    <div className="stats-card">
+                        <div className="stats-icon">❤️</div>
+                        <div className="stats-value">
+                            {stats.TOTAL_LIKE_CNT}
+                        </div>
+                        <div className="stats-title">
+                            받은 좋아요
+                        </div>
+                    </div>
                 </div>
             </div>
 
