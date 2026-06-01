@@ -1,6 +1,7 @@
 const express = require("express"); // Express 서버 프레임워크
 const cors = require("cors"); // React와 통신하기 위한 CORS 설정
 const db = require("./db"); // Oracle DB 연결 모듈
+const path = require("path");
 
 // 회원 관련 API 라우터
 const userRouter = require("./routes/user");
@@ -21,6 +22,7 @@ const likeRouter = require("./routes/like");
 
 
 
+
 // =============================
 // 미들웨어 설정
 // =============================
@@ -31,6 +33,13 @@ app.use(cors());
 // 요청 Body의 JSON 데이터를 사용할 수 있게 설정
 // req.body 사용 가능
 app.use(express.json());
+
+app.use(
+    "/uploads",
+    express.static(
+        path.join(__dirname, "uploads")
+    )
+);
 
 
 // =============================

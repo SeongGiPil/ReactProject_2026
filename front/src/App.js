@@ -23,6 +23,7 @@ import Write from './pages/Write';
 import Feed from './pages/Feed';
 // 게시글상세보기
 import PostView from './pages/PostView';
+import TeamBoard from "./pages/TeamBoard";
 
 function App() {
 
@@ -51,7 +52,7 @@ function App() {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3
+          p: 0
         }}
       >
 
@@ -81,6 +82,8 @@ function App() {
                 : <Navigate to="/" />
             }
           />
+
+          <Route path="/team/:teamId" element={<TeamBoard />} />
 
           {/* 서브 페이지
               토큰이 있으면 Sub 출력

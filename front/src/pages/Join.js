@@ -10,16 +10,11 @@ function Join() {
     const [nickname, setNickname] = useState("");
     const [email, setEmail] = useState("");
 
-    // 아이디 중복체크 여부
     const [isIdCheck, setIsIdCheck] = useState(false);
 
-    // 팀 목록
     const [teamList, setTeamList] = useState([]);
-
-    // 선택한 팀 목록
     const [selectedTeams, setSelectedTeams] = useState([]);
 
-    // 팀 목록 조회
     function fnGetTeamList() {
         fetch("http://localhost:3010/team/list")
             .then(res => res.json())
@@ -34,7 +29,6 @@ function Join() {
             });
     }
 
-    // 아이디 중복체크
     function fnIdCheck() {
         if (!userId) {
             alert("아이디를 입력하세요.");
@@ -58,7 +52,6 @@ function Join() {
             });
     }
 
-    // 팀 체크/해제
     function fnTeamCheck(teamId) {
         if (selectedTeams.includes(teamId)) {
             setSelectedTeams(
@@ -72,7 +65,6 @@ function Join() {
         }
     }
 
-    // 회원가입
     function fnJoin() {
         if (!userId || !pwd || !pwdCheck || !nickname || !email) {
             alert("모든 항목을 입력하세요.");
@@ -117,166 +109,114 @@ function Join() {
             });
     }
 
-    // 페이지 처음 열릴 때 팀 목록 조회
     useEffect(() => {
         fnGetTeamList();
     }, []);
 
     return (
-        <div
-            style={{
-                width: "430px",
-                margin: "60px auto",
-                border: "1px solid #ddd",
-                padding: "30px",
-                borderRadius: "10px",
-                boxShadow: "0 0 10px rgba(0,0,0,0.1)"
-            }}
-        >
-            <h2 style={{ textAlign: "center" }}>
-                회원가입
-            </h2>
+        <div className="auth-page">
+            <div className="auth-card auth-card-large">
+                <h2 className="auth-title">
+                    SpoTalk 회원가입
+                </h2>
 
-            <div style={{ display: "flex", gap: "5px" }}>
-                <input
-                    type="text"
-                    placeholder="아이디"
-                    value={userId}
-                    onChange={(e) => {
-                        setUserId(e.target.value);
-                        setIsIdCheck(false);
-                    }}
-                    style={{
-                        width: "75%",
-                        height: "40px",
-                        marginBottom: "10px",
-                        padding: "0 10px",
-                        boxSizing: "border-box"
-                    }}
-                />
+                <p className="auth-subtitle">
+                    스포츠 팬들과 함께 응원하고 소통해보세요.
+                </p>
 
-                <button
-                    onClick={fnIdCheck}
-                    style={{
-                        width: "25%",
-                        height: "40px"
-                    }}
-                >
-                    중복체크
-                </button>
-            </div>
+                <div className="id-check-row">
+                    <input
+                        className="auth-input"
+                        type="text"
+                        placeholder="아이디"
+                        value={userId}
+                        onChange={(e) => {
+                            setUserId(e.target.value);
+                            setIsIdCheck(false);
+                        }}
+                    />
 
-            <input
-                type="password"
-                placeholder="비밀번호"
-                value={pwd}
-                onChange={(e) => setPwd(e.target.value)}
-                style={inputStyle}
-            />
-
-            <input
-                type="password"
-                placeholder="비밀번호 확인"
-                value={pwdCheck}
-                onChange={(e) => setPwdCheck(e.target.value)}
-                style={inputStyle}
-            />
-
-            <input
-                type="text"
-                placeholder="닉네임"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                style={inputStyle}
-            />
-
-            <input
-                type="email"
-                placeholder="이메일"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={inputStyle}
-            />
-
-            {/* 응원팀 선택 */}
-            <div
-                style={{
-                    marginTop: "10px",
-                    marginBottom: "15px",
-                    padding: "15px",
-                    border: "1px solid #e0e0e0",
-                    borderRadius: "8px",
-                    backgroundColor: "#fafafa"
-                }}
-            >
-                <div
-                    style={{
-                        fontWeight: "bold",
-                        marginBottom: "10px"
-                    }}
-                >
-                    응원팀 선택
-                    <span style={{ fontSize: "12px", color: "#888" }}>
-                        {" "}(선택 안 해도 가능)
-                    </span>
+                    <button
+                        className="insert-btn"
+                        onClick={fnIdCheck}
+                    >
+                        중복확인
+                    </button>
                 </div>
 
-                {teamList.map(team => (
-                    <label
-                        key={team.TEAM_ID}
-                        style={{
-                            display: "inline-block",
-                            width: "50%",
-                            marginBottom: "8px",
-                            cursor: "pointer"
-                        }}
-                    >
-                        <input
-                            type="checkbox"
-                            checked={selectedTeams.includes(team.TEAM_ID)}
-                            onChange={() => fnTeamCheck(team.TEAM_ID)}
-                        />
-                        {" "}
-                        {team.TEAM_NAME}
-                    </label>
-                ))}
-            </div>
+                <input
+                    className="auth-input"
+                    type="password"
+                    placeholder="비밀번호"
+                    value={pwd}
+                    onChange={(e) => setPwd(e.target.value)}
+                />
 
-            <button
-                onClick={fnJoin}
-                style={{
-                    width: "100%",
-                    height: "45px",
-                    backgroundColor: "#4caf50",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                    cursor: "pointer"
-                }}
-            >
-                회원가입
-            </button>
+                <input
+                    className="auth-input"
+                    type="password"
+                    placeholder="비밀번호 확인"
+                    value={pwdCheck}
+                    onChange={(e) => setPwdCheck(e.target.value)}
+                />
 
-            <div
-                style={{
-                    marginTop: "15px",
-                    textAlign: "center"
-                }}
-            >
-                <Link to="/">
-                    로그인으로 이동
-                </Link>
+                <input
+                    className="auth-input"
+                    type="text"
+                    placeholder="닉네임"
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                />
+
+                <input
+                    className="auth-input"
+                    type="email"
+                    placeholder="이메일"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+
+                <div className="team-select-box">
+                    <div className="team-select-title">
+                        응원팀 선택
+                    </div>
+
+                    <div className="team-select-sub">
+                        선택하지 않아도 회원가입 가능합니다.
+                    </div>
+
+                    {teamList.map(team => (
+                        <label
+                            key={team.TEAM_ID}
+                            className="team-item"
+                        >
+                            <input
+                                type="checkbox"
+                                checked={selectedTeams.includes(team.TEAM_ID)}
+                                onChange={() => fnTeamCheck(team.TEAM_ID)}
+                            />
+                            {" "}
+                            {team.TEAM_NAME}
+                        </label>
+                    ))}
+                </div>
+
+                <button
+                    className="auth-btn join-btn"
+                    onClick={fnJoin}
+                >
+                    회원가입
+                </button>
+
+                <div className="auth-link-box">
+                    이미 계정이 있나요?{" "}
+                    <Link to="/">
+                        로그인으로 이동
+                    </Link>
+                </div>
             </div>
         </div>
     );
 }
-
-const inputStyle = {
-    width: "100%",
-    height: "40px",
-    marginBottom: "10px",
-    padding: "0 10px",
-    boxSizing: "border-box"
-};
 
 export default Join;

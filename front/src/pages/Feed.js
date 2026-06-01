@@ -8,7 +8,7 @@ function Feed() {
         fetch("http://localhost:3010/post/list")
             .then(res => res.json())
             .then(data => {
-                console.log(data);
+                console.log("게시글 목록 :", data);
 
                 if (data.success) {
                     setList(data.list);
@@ -25,6 +25,7 @@ function Feed() {
         if (type === "CHEER") return "응원글";
         if (type === "INFO") return "정보글";
         if (type === "REVIEW") return "후기글";
+
         return "기타";
     }
 
@@ -33,106 +34,55 @@ function Feed() {
     }, []);
 
     return (
-        <div
-            style={{
-                width: "800px",
-                margin: "30px auto"
-            }}
-        >
-            <h2
-                style={{
-                    textAlign: "center",
-                    marginBottom: "20px"
-                }}
-            >
+        <div className="feed-container">
+            <h2 className="page-title">
                 게시글 목록
             </h2>
 
             {list.length === 0 ? (
-                <div
-                    style={{
-                        textAlign: "center",
-                        marginTop: "50px"
-                    }}
-                >
+                <div className="empty-box">
                     게시글이 없습니다.
                 </div>
             ) : (
-                list.map(item => {
-                    return (
-                        <div
-                            key={item.POST_ID}
-                            style={{
-                                border: "1px solid #ddd",
-                                borderRadius: "10px",
-                                padding: "20px",
-                                marginBottom: "15px",
-                                boxShadow: "0 0 5px rgba(0,0,0,0.1)"
-                            }}
-                        >
-                            <div
-                                style={{
-                                    marginBottom: "8px",
-                                    fontSize: "13px",
-                                    color: "#1976d2",
-                                    fontWeight: "bold"
-                                }}
-                            >
-                                [{fnTypeName(item.POST_TYPE)}]
-                            </div>
+                list.map(item => (
+                    <div
+                        key={item.POST_ID}
+                        className="post-card"
+                    >
+                        <div className="post-card-top">
+                            <span className="post-type">
+                                {fnTypeName(item.POST_TYPE)}
+                            </span>
 
-                            <Link
-                                to={"/post/" + item.POST_ID}
-                                style={{
-                                    textDecoration: "none",
-                                    color: "black"
-                                }}
-                            >
-                                <h3>{item.TITLE}</h3>
-                            </Link>
-
-                            <div
-                                style={{
-                                    color: "#666",
-                                    fontSize: "14px",
-                                    marginBottom: "10px"
-                                }}
-                            >
-                                작성자 : {item.USER_ID}
-                            </div>
-
-                            <div
-                                style={{
-                                    marginBottom: "10px",
-                                    whiteSpace: "pre-wrap"
-                                }}
-                            >
-                                {item.CONTENT}
-                            </div>
-
-                            <div
-                                style={{
-                                    color: "#777",
-                                    fontSize: "13px",
-                                    marginBottom: "5px"
-                                }}
-                            >
-                                조회수 {item.VIEW_CNT} · 좋아요 {item.LIKE_CNT}
-                            </div>
-
-                            <div
-                                style={{
-                                    color: "#999",
-                                    fontSize: "13px"
-                                }}
-                            >
-                                작성일 :{" "}
+                            <span className="post-date">
                                 {item.CDATETIME &&
-                                    new Date(item.CDATETIME).toLocaleString("ko-KR")}
-                            </div>
+                                    new Date(item.CDATETIME)
+                                        .toLocaleString("ko-KR")}
+                            </span>
                         </div>
-                    );
-                })
+
+                        <Link
+                            to={"/post/" + item.POST_ID}
+                            className="post-title-link"
+                        >
+                            <h3>{item.TITLE}</h3>
+                        </Link>
+
+                        <div className="post-writer">
+                            작성자 : {item.USER_ID}
+                        </div>
+
+                        <div className="post-content-preview">
+                            {item.CONTENT}
+                        </div>
+
+                        <div className="post-meta">
+                            👀 조회수 {item.VIEW_CNT}
+                            {" · "}
+                            ❤️ 좋아요 {item.LIKE_CNT}
+                        </div>
+                    </div>
+                ))
             )}
         </div>
     );

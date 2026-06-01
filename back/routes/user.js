@@ -2,8 +2,46 @@ const express = require("express");
 const db = require("../db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const multer = require("multer");
+const path = require("path");
 
 const router = express.Router();
+
+
+// =========================
+// 프로필 이미지 업로드 설정
+// =========================
+
+const profileStorage = multer.diskStorage({
+
+    // 파일 저장 위치
+    destination: function (req, file, cb) {
+        cb(
+            null,
+            path.join(__dirname, "../uploads/profile")
+        );
+    },
+
+    // 저장될 파일명
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname);
+
+        cb(
+            null,
+            Date.now() +
+            "_" +
+            Math.round(Math.random() * 1000000) +
+            ext
+        );
+    }
+
+});
+
+// upload.single("profileImg")에서 profileImg가 프론트 FormData key 이름
+const profileUpload = multer({
+    storage: profileStorage
+});
+
 
 // 전체 회원 조회
 router.get("/", async (req, res) => {
@@ -27,10 +65,10 @@ router.get("/", async (req, res) => {
     }
 });
 
+
 // 아이디 중복체크
 router.get("/check/:userId", async (req, res) => {
     const { userId } = req.params;
-
     let conn;
 
     try {
@@ -62,10 +100,10 @@ router.get("/check/:userId", async (req, res) => {
     }
 });
 
+
 // 회원가입
 router.post("/join", async (req, res) => {
     const { userId, pwd, nickname, email } = req.body;
-
     let conn;
 
     try {
@@ -76,15 +114,13 @@ router.post("/join", async (req, res) => {
 
         await conn.execute(
             `
-            INSERT INTO USERS
-            (
+            INSERT INTO USERS (
                 USER_ID,
                 USER_PWD,
                 NICKNAME,
                 EMAIL
             )
-            VALUES
-            (
+            VALUES (
                 :userId,
                 :pwd,
                 :nickname,
@@ -120,16 +156,15 @@ router.post("/join", async (req, res) => {
     }
 });
 
+
 // 로그인 + JWT 발급
 router.post("/login", async (req, res) => {
     const { userId, pwd } = req.body;
-
     let conn;
 
     try {
         conn = await db.getConnection();
 
-        // 아이디만 조회
         const result = await conn.execute(
             `
             SELECT
@@ -155,7 +190,10 @@ router.post("/login", async (req, res) => {
         const user = result.rows[0];
 
         // 암호화된 비밀번호 비교
-        const isMatch = await bcrypt.compare(pwd, user.USER_PWD);
+        const isMatch = await bcrypt.compare(
+            pwd,
+            user.USER_PWD
+        );
 
         if (!isMatch) {
             return res.json({
@@ -171,6 +209,7 @@ router.post("/login", async (req, res) => {
             });
         }
 
+        // JWT 토큰 생성
         const token = jwt.sign(
             {
                 userId: user.USER_ID,
@@ -204,10 +243,10 @@ router.post("/login", async (req, res) => {
     }
 });
 
+
 // 회원정보 조회
 router.get("/:userId", async (req, res) => {
     const { userId } = req.params;
-
     let conn;
 
     try {
@@ -254,10 +293,10 @@ router.get("/:userId", async (req, res) => {
     }
 });
 
+
 // 회원정보 수정
 router.put("/update", async (req, res) => {
     const { userId, nickname, email } = req.body;
-
     let conn;
 
     try {
@@ -298,5 +337,71 @@ router.put("/update", async (req, res) => {
         if (conn) await conn.close();
     }
 });
+
+
+// =========================
+// 프로필 이미지 수정
+// =========================
+
+router.post(
+    "/profile-img",
+    profileUpload.single("profileImg"),
+    async (req, res) => {
+
+        const { userId } = req.body;
+
+        let conn;
+
+        try {
+            // 파일이 안 넘어온 경우
+            if (!req.file) {
+                return res.status(400).json({
+                    success: false,
+                    message: "이미지 파일이 없습니다."
+                });
+            }
+
+            conn = await db.getConnection();
+
+            // 브라우저에서 접근 가능한 이미지 경로
+            const profileImgPath =
+                "/uploads/profile/" + req.file.filename;
+
+            await conn.execute(
+                `
+                UPDATE USERS
+                SET PROFILE_IMG = :profileImg
+                WHERE USER_ID = :userId
+                `,
+                {
+                    profileImg: profileImgPath,
+                    userId
+                },
+                {
+                    autoCommit: true
+                }
+            );
+
+            res.json({
+                success: true,
+                message: "프로필 이미지가 변경되었습니다.",
+                profileImg: profileImgPath
+            });
+
+        } catch (err) {
+            console.log("프로필 이미지 업로드 에러 :", err);
+
+            res.status(500).json({
+                success: false,
+                message: "프로필 이미지 업로드 실패"
+            });
+
+        } finally {
+            if (conn) await conn.close();
+        }
+
+    }
+);
+
 
 module.exports = router;

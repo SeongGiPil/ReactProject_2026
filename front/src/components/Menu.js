@@ -1,196 +1,222 @@
-import React from 'react';
+import React from "react";
 
-// MUI 컴포넌트
 import {
-  Drawer,
-  List,
-  ListItem,
-  ListItemText,
-  Typography,
-  Toolbar,
-  ListItemIcon,
-  Button
-} from '@mui/material';
+    Drawer,
+    List,
+    ListItem,
+    ListItemText,
+    Typography,
+    Toolbar,
+    ListItemIcon,
+    Button,
+    Box,
+    ListItemButton,
+    Avatar
+} from "@mui/material";
 
-
-// 메뉴 아이콘
 import {
-  Home,      // 메인 아이콘
-  Person,    // 마이페이지 아이콘
-  EditNote,  // 글쓰기 아이콘
-  Article    // 게시글 목록 아이콘
-} from '@mui/icons-material';
+    Home,
+    Person,
+    EditNote,
+    Article,
+    Logout
+} from "@mui/icons-material";
 
-// 페이지 이동
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
 
 function Menu() {
+    const navigate = useNavigate();
 
-  // 페이지 이동 객체
-  const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem("user"));
 
-  // 로그인한 사용자 정보 가져오기
-  const user = JSON.parse(localStorage.getItem("user"));
+    function fnLogout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
 
-  // 로그아웃 함수
-  function fnLogout() {
+        alert("로그아웃 되었습니다.");
+        navigate("/");
+    }
 
-    // JWT 토큰 삭제
-    localStorage.removeItem("token");
+    return (
+        <Drawer
+            variant="permanent"
+            sx={{
+                width: 200,
+                flexShrink: 0,
 
-    // 로그인 사용자 정보 삭제
-    localStorage.removeItem("user");
-
-    alert("로그아웃 되었습니다.");
-
-    // 로그인 페이지로 이동
-    navigate("/");
-  }
-
-  return (
-
-    // 왼쪽 사이드 메뉴
-    <Drawer
-      variant="permanent"
-      sx={{
-        // 메뉴 너비
-        width: 240,
-
-        // 화면 축소 시 메뉴 크기 유지
-        flexShrink: 0,
-
-        '& .MuiDrawer-paper': {
-
-          // Drawer 내부 너비
-          width: 240,
-
-          // padding 포함 크기 계산
-          boxSizing: 'border-box',
-        },
-      }}
-    >
-
-      {/* 상단 여백 */}
-      <Toolbar />
-
-      {/* 메뉴 제목 */}
-      <Typography
-        variant="h6"
-        sx={{ p: 2 }}
-      >
-        SNS 메뉴
-      </Typography>
-
-      {/* 로그인 사용자 닉네임 출력 */}
-      <Typography
-        sx={{
-          px: 2,
-          pb: 2
-        }}
-      >
-        {user?.NICKNAME || user?.nickname}님 환영합니다.
-      </Typography>
-
-      {/* 메뉴 목록 */}
-      <List>
-
-        {/* 메인 페이지 이동 */}
-        <ListItem
-          button
-          component={Link}
-          to="/main"
+                "& .MuiDrawer-paper": {
+                    width: 200,
+                    boxSizing: "border-box",
+                    backgroundColor: "#102030",
+                    color: "white",
+                    borderRight: "none"
+                }
+            }}
         >
-          <ListItemIcon>
-            <Home />
-          </ListItemIcon>
+            <Toolbar />
 
-          <ListItemText
-            primary="메인"
-          />
-        </ListItem>
+            <Box
+                sx={{
+                    px: 2,
+                    py: 2,
+                    borderBottom: "1px solid rgba(255,255,255,0.15)"
+                }}
+            >
+                <Typography
+                    variant="h5"
+                    sx={{
+                        fontWeight: "bold",
+                        color: "#ffffff"
+                    }}
+                >
+                    SpoTalk
+                </Typography>
 
-        {/* 글쓰기 페이지 이동 */}
-        <ListItem
-          button
-          component={Link}
-          to="/write"
-        >
-          <ListItemIcon>
-            <EditNote />
-          </ListItemIcon>
+                <Typography
+                    sx={{
+                        mt: 1,
+                        fontSize: "13px",
+                        color: "#b0bec5"
+                    }}
+                >
+                    스포츠 팬 커뮤니티
+                </Typography>
+            </Box>
 
-          <ListItemText
-            primary="글쓰기"
-          />
-        </ListItem>
-        {/* 게시글목록 */}
-        {/* 게시글 목록 페이지 이동 */}
-        <ListItem
-          button
-          component={Link}
-          to="/feed"
-        >
-          <ListItemIcon>
+            <Box
+                sx={{
+                    px: 2,
+                    py: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                    borderBottom: "1px solid rgba(255,255,255,0.15)"
+                }}
+            >
+                <Avatar
+                    src={
+                        user?.PROFILE_IMG
+                            ? "http://localhost:3010" + user.PROFILE_IMG
+                            : ""
+                    }
+                    sx={{
+                        width: 42,
+                        height: 42,
+                        bgcolor: "#1976d2"
+                    }}
+                />
 
-            {/* 게시글 목록 아이콘 */}
-            <Article />
+                <Box>
+                    <Typography
+                        sx={{
+                            fontSize: "14px",
+                            color: "#cfd8dc",
+                            fontWeight: "bold"
+                        }}
+                    >
+                        {user?.NICKNAME || user?.nickname || "게스트"}
+                    </Typography>
 
-          </ListItemIcon>
+                    <Typography
+                        sx={{
+                            fontSize: "11px",
+                            color: "#90a4ae",
+                            mt: 0.3
+                        }}
+                    >
+                        환영합니다.
+                    </Typography>
+                </Box>
+            </Box>
 
-          {/* 메뉴 이름 */}
-          <ListItemText
-            primary="게시글목록"
-          />
+            <List sx={{ px: 1, mt: 1 }}>
+                <ListItem disablePadding>
+                    <ListItemButton
+                        component={Link}
+                        to="/main"
+                        sx={menuStyle}
+                    >
+                        <ListItemIcon sx={iconStyle}>
+                            <Home />
+                        </ListItemIcon>
+                        <ListItemText primary="메인" />
+                    </ListItemButton>
+                </ListItem>
 
-        </ListItem>
+                <ListItem disablePadding>
+                    <ListItemButton
+                        component={Link}
+                        to="/write"
+                        sx={menuStyle}
+                    >
+                        <ListItemIcon sx={iconStyle}>
+                            <EditNote />
+                        </ListItemIcon>
+                        <ListItemText primary="글쓰기" />
+                    </ListItemButton>
+                </ListItem>
 
-        {/* 서브 페이지 이동 */}
-        <ListItem
-          button
-          component={Link}
-          to="/sub"
-        >
-          <ListItemIcon>
-            <Home />
-          </ListItemIcon>
+                <ListItem disablePadding>
+                    <ListItemButton
+                        component={Link}
+                        to="/feed"
+                        sx={menuStyle}
+                    >
+                        <ListItemIcon sx={iconStyle}>
+                            <Article />
+                        </ListItemIcon>
+                        <ListItemText primary="통합게시판" />
+                    </ListItemButton>
+                </ListItem>
 
-          <ListItemText
-            primary="서브"
-          />
-        </ListItem>
+                <ListItem disablePadding>
+                    <ListItemButton
+                        component={Link}
+                        to="/mypage"
+                        sx={menuStyle}
+                    >
+                        <ListItemIcon sx={iconStyle}>
+                            <Person />
+                        </ListItemIcon>
+                        <ListItemText primary="마이페이지" />
+                    </ListItemButton>
+                </ListItem>
+            </List>
 
-        {/* 마이페이지 이동 */}
-        <ListItem
-          button
-          component={Link}
-          to="/mypage"
-        >
-          <ListItemIcon>
-            <Person />
-          </ListItemIcon>
-
-          <ListItemText
-            primary="마이페이지"
-          />
-        </ListItem>
-
-      </List>
-
-      {/* 로그아웃 버튼 */}
-      <Button
-        variant="contained"
-        color="error"
-        sx={{
-          margin: 2
-        }}
-        onClick={fnLogout}
-      >
-        로그아웃
-      </Button>
-
-    </Drawer>
-  );
+            <Box sx={{ mt: "auto", p: 2 }}>
+                <Button
+                    fullWidth
+                    variant="contained"
+                    color="error"
+                    startIcon={<Logout />}
+                    onClick={fnLogout}
+                    sx={{
+                        height: "40px",
+                        borderRadius: "8px",
+                        fontWeight: "bold",
+                        fontSize: "13px"
+                    }}
+                >
+                    로그아웃
+                </Button>
+            </Box>
+        </Drawer>
+    );
 }
 
+const menuStyle = {
+    borderRadius: "8px",
+    mb: 0.5,
+    color: "white",
+
+    "&:hover": {
+        backgroundColor: "rgba(255,255,255,0.12)"
+    }
+};
+
+const iconStyle = {
+    color: "#90caf9",
+    minWidth: "36px"
+};
 
 export default Menu;
