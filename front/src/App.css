@@ -1,38 +1,155 @@
-.App {
-  text-align: center;
+/* 전체 페이지 */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f4f6f8;
+    font-family: "맑은 고딕", sans-serif;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* 링크 */
+a {
+    text-decoration: none;
+    color: inherit;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* 버튼 */
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    transition: 0.2s;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+button:hover {
+    opacity: 0.9;
 }
 
-.App-link {
-  color: #61dafb;
+/* input */
+input {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 8px 10px;
+    outline: none;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+input:focus {
+    border-color: #1976d2;
+}
+
+/* textarea */
+textarea {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    outline: none;
+}
+
+textarea:focus {
+    border-color: #1976d2;
+}
+
+/* select */
+select {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    outline: none;
+}
+
+select:focus {
+    border-color: #1976d2;
+}
+
+/* 테이블 */
+table {
+    background: white;
+}
+
+th {
+    background-color: #1976d2;
+    color: white;
+    padding: 10px;
+}
+
+td {
+    padding: 10px;
+}
+
+tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+/* 카드 */
+.card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.08);
+}
+
+/* 페이지 제목 */
+.page-title {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #222;
+}
+
+/* 게시판 타입 */
+.post-type {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #1976d2;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* 좋아요 버튼 */
+.like-btn {
+    background-color: #ff5252;
+    color: white;
+    padding: 8px 15px;
+}
+
+/* 수정 버튼 */
+.update-btn {
+    background-color: #4caf50;
+    color: white;
+    padding: 10px 15px;
+}
+
+/* 삭제 버튼 */
+.delete-btn {
+    background-color: #f44336;
+    color: white;
+    padding: 10px 15px;
+}
+
+/* 등록 버튼 */
+.insert-btn {
+    background-color: #1976d2;
+    color: white;
+    padding: 10px 15px;
+}
+
+/* 목록 버튼 */
+.list-btn {
+    background-color: #555;
+    color: white;
+    padding: 10px 15px;
+}
+
+/* 마이페이지 구분선 */
+.section-title {
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* 댓글 카드 */
+.comment-box {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
 }

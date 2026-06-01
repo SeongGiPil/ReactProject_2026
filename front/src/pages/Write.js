@@ -12,6 +12,10 @@ function Write() {
     // 내용 상태값
     const [content, setContent] = useState("");
 
+    // 게시글 유형 상태값
+    // FREE / CHEER / INFO / REVIEW
+    const [postType, setPostType] = useState("FREE");
+
     // 게시글 등록 함수
     function fnWrite() {
 
@@ -24,6 +28,13 @@ function Write() {
         // 로그인한 사용자 정보 가져오기
         const user = JSON.parse(localStorage.getItem("user"));
 
+        // 로그인 정보가 없을 경우
+        if (!user) {
+            alert("로그인이 필요합니다.");
+            navigate("/login");
+            return;
+        }
+
         // 게시글 등록 API 호출
         fetch("http://localhost:3010/post/add", {
             method: "POST",
@@ -33,28 +44,29 @@ function Write() {
             body: JSON.stringify({
                 userId: user.USER_ID,
                 title: title,
-                content: content
+                content: content,
+                postType: postType
             })
         })
-        .then(res => res.json())
-        .then(data => {
+            .then(res => res.json())
+            .then(data => {
 
-            console.log(data);
+                console.log(data);
 
-            if (data.success) {
-                alert("게시글이 등록되었습니다.");
+                if (data.success) {
+                    alert("게시글이 등록되었습니다.");
 
-                // 등록 후 메인으로 이동
-                navigate("/main");
-            } else {
-                alert(data.message);
-            }
+                    // 등록 후 게시글 목록으로 이동
+                    navigate("/feed");
+                } else {
+                    alert(data.message);
+                }
 
-        })
-        .catch(err => {
-            console.log(err);
-            alert("게시글 등록 실패");
-        });
+            })
+            .catch(err => {
+                console.log(err);
+                alert("게시글 등록 실패");
+            });
 
     }
 
@@ -78,6 +90,24 @@ function Write() {
             >
                 게시글 작성
             </h2>
+
+            {/* 게시글 유형 선택 */}
+            <select
+                value={postType}
+                onChange={(e) => setPostType(e.target.value)}
+                style={{
+                    width: "100%",
+                    height: "40px",
+                    marginBottom: "15px",
+                    padding: "0 10px",
+                    boxSizing: "border-box"
+                }}
+            >
+                <option value="FREE">자유글</option>
+                <option value="CHEER">응원글</option>
+                <option value="INFO">정보글</option>
+                <option value="REVIEW">후기글</option>
+            </select>
 
             {/* 제목 입력 */}
             <input

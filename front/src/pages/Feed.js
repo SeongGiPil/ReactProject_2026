@@ -1,32 +1,33 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-function Feed() {
 
-    // 게시글 목록 상태값
+function Feed() {
     const [list, setList] = useState([]);
 
-    // 게시글 목록 조회 함수
     function fnGetList() {
-
         fetch("http://localhost:3010/post/list")
             .then(res => res.json())
             .then(data => {
-
                 console.log(data);
 
                 if (data.success) {
                     setList(data.list);
                 }
-
             })
             .catch(err => {
                 console.log(err);
                 alert("게시글 목록 조회 실패");
             });
-
     }
 
-    // 페이지 처음 열릴 때 목록 조회
+    function fnTypeName(type) {
+        if (type === "FREE") return "자유글";
+        if (type === "CHEER") return "응원글";
+        if (type === "INFO") return "정보글";
+        if (type === "REVIEW") return "후기글";
+        return "기타";
+    }
+
     useEffect(() => {
         fnGetList();
     }, []);
@@ -69,7 +70,24 @@ function Feed() {
                                 boxShadow: "0 0 5px rgba(0,0,0,0.1)"
                             }}
                         >
-                            <Link to={"/post/" + item.POST_ID}>
+                            <div
+                                style={{
+                                    marginBottom: "8px",
+                                    fontSize: "13px",
+                                    color: "#1976d2",
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                [{fnTypeName(item.POST_TYPE)}]
+                            </div>
+
+                            <Link
+                                to={"/post/" + item.POST_ID}
+                                style={{
+                                    textDecoration: "none",
+                                    color: "black"
+                                }}
+                            >
                                 <h3>{item.TITLE}</h3>
                             </Link>
 
@@ -94,14 +112,23 @@ function Feed() {
 
                             <div
                                 style={{
+                                    color: "#777",
+                                    fontSize: "13px",
+                                    marginBottom: "5px"
+                                }}
+                            >
+                                조회수 {item.VIEW_CNT} · 좋아요 {item.LIKE_CNT}
+                            </div>
+
+                            <div
+                                style={{
                                     color: "#999",
                                     fontSize: "13px"
                                 }}
                             >
-                                작성일 :
-                                {
-                                    new Date(item.CDATE).toLocaleString('ko-KR')
-                                }
+                                작성일 :{" "}
+                                {item.CDATETIME &&
+                                    new Date(item.CDATETIME).toLocaleString("ko-KR")}
                             </div>
                         </div>
                     );
