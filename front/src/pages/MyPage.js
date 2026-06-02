@@ -14,11 +14,26 @@ function MyPage() {
     const [teamList, setTeamList] = useState([]);
     const [selectedTeams, setSelectedTeams] = useState([]);
 
+    const [showGradeInfo, setShowGradeInfo] = useState(false);
+
     const [stats, setStats] = useState({
         POST_CNT: 0,
         COMMENT_CNT: 0,
         TOTAL_LIKE_CNT: 0
     });
+
+    const teamIcons = {
+        LG: "⚡",
+        두산: "🐻",
+        SSG: "🚀",
+        KIA: "🐯",
+        삼성: "🦁",
+        롯데: "⚓",
+        한화: "🦅",
+        KT: "🧙",
+        NC: "🦖",
+        키움: "🦸"
+    };
 
     function fnTypeName(type) {
         if (type === "FREE") return "자유글";
@@ -30,6 +45,99 @@ function MyPage() {
 
     function getLoginUser() {
         return JSON.parse(localStorage.getItem("user"));
+    }
+
+    function getMainTeam() {
+        if (selectedTeams.length === 0) {
+            return {
+                name: "통합",
+                icon: "⚾"
+            };
+        }
+
+        const team = teamList.find(
+            item => item.TEAM_ID === selectedTeams[0]
+        );
+
+        if (!team) {
+            return {
+                name: "통합",
+                icon: "⚾"
+            };
+        }
+
+        return {
+            name: team.TEAM_NAME,
+            icon: teamIcons[team.TEAM_NAME] || "⚾"
+        };
+    }
+
+    function getFanScore() {
+        return (
+            Number(stats.POST_CNT || 0) * 5 +
+            Number(stats.COMMENT_CNT || 0) * 2 +
+            Number(stats.TOTAL_LIKE_CNT || 0)
+        );
+    }
+
+    function getFanGrade() {
+        const score = getFanScore();
+
+        if (score >= 500) {
+            return { name: "MVP Fan", color: "#ff5722" };
+        }
+
+        if (score >= 300) {
+            return { name: "Gold Fan", color: "#f9a825" };
+        }
+
+        if (score >= 150) {
+            return { name: "Silver Fan", color: "#90a4ae" };
+        }
+
+        if (score >= 50) {
+            return { name: "Bronze Fan", color: "#8d6e63" };
+        }
+
+        return { name: "Rookie Fan", color: "#1976d2" };
+    }
+
+    function getNextGradeInfo() {
+        const score = getFanScore();
+
+        if (score >= 500) {
+            return {
+                nextGrade: "최고 등급 달성",
+                remainScore: 0,
+                needPost: 0,
+                needComment: 0,
+                needLike: 0
+            };
+        }
+
+        let targetScore = 50;
+        let nextGrade = "Bronze Fan";
+
+        if (score >= 300) {
+            targetScore = 500;
+            nextGrade = "MVP Fan";
+        } else if (score >= 150) {
+            targetScore = 300;
+            nextGrade = "Gold Fan";
+        } else if (score >= 50) {
+            targetScore = 150;
+            nextGrade = "Silver Fan";
+        }
+
+        const remainScore = targetScore - score;
+
+        return {
+            nextGrade,
+            remainScore,
+            needPost: Math.ceil(remainScore / 5),
+            needComment: Math.ceil(remainScore / 2),
+            needLike: remainScore
+        };
     }
 
     function fnGetUser() {
@@ -246,6 +354,11 @@ function MyPage() {
         fnGetStats();
     }, []);
 
+    const fanScore = getFanScore();
+    const fanGrade = getFanGrade();
+    const nextGradeInfo = getNextGradeInfo();
+    const mainTeam = getMainTeam();
+
     return (
         <div className="mypage-container">
             <h2 className="page-title">마이페이지</h2>
@@ -307,6 +420,103 @@ function MyPage() {
                     <button className="update-btn" onClick={fnUpdate}>
                         수정하기
                     </button>
+                </div>
+            </div>
+
+            <div className="mypage-card">
+                <h3 className="section-title">⚾ 팬 등급</h3>
+
+                <div
+                    style={{
+                        padding: "20px",
+                        borderRadius: "15px",
+                        background: "#f5f9ff",
+                        border: "1px solid #d6e6ff"
+                    }}
+                >
+                    <div
+                        style={{
+                            fontSize: "30px",
+                            fontWeight: "bold",
+                            color: fanGrade.color
+                        }}
+                    >
+                        {mainTeam.icon} {mainTeam.name} {fanGrade.name}
+                    </div>
+
+                    <div style={{ marginTop: "10px", fontSize: "16px" }}>
+                        팬 활동지수 : <strong>{fanScore}점</strong>
+                    </div>
+
+                    <div style={{ marginTop: "15px" }}>
+                        {nextGradeInfo.remainScore === 0 ? (
+                            <strong>최고 등급을 달성했습니다! 🔥</strong>
+                        ) : (
+                            <>
+                                다음 등급{" "}
+                                <strong>
+                                    {mainTeam.name} {nextGradeInfo.nextGrade}
+                                </strong>
+                                까지{" "}
+                                <strong>{nextGradeInfo.remainScore}점</strong>{" "}
+                                남았습니다.
+                            </>
+                        )}
+                    </div>
+
+                    {nextGradeInfo.remainScore > 0 && (
+                        <div
+                            style={{
+                                marginTop: "12px",
+                                padding: "12px",
+                                background: "white",
+                                borderRadius: "10px"
+                            }}
+                        >
+                            <div>
+                                📝 게시글만 작성하면{" "}
+                                <strong>{nextGradeInfo.needPost}개</strong> 필요
+                            </div>
+                            <div>
+                                💬 댓글만 작성하면{" "}
+                                <strong>{nextGradeInfo.needComment}개</strong> 필요
+                            </div>
+                            <div>
+                                ❤️ 좋아요만 받으면{" "}
+                                <strong>{nextGradeInfo.needLike}개</strong> 필요
+                            </div>
+                        </div>
+                    )}
+
+                    <button
+                        className="list-btn"
+                        style={{ marginTop: "15px" }}
+                        onClick={() => setShowGradeInfo(!showGradeInfo)}
+                    >
+                        {showGradeInfo ? "등급 조건 닫기" : "등급 조건 보기"}
+                    </button>
+
+                    {showGradeInfo && (
+                        <div
+                            style={{
+                                marginTop: "15px",
+                                padding: "15px",
+                                background: "white",
+                                borderRadius: "10px",
+                                lineHeight: "1.8"
+                            }}
+                        >
+                            <div>게시글 1개 = 5점</div>
+                            <div>댓글 1개 = 2점</div>
+                            <div>받은 좋아요 1개 = 1점</div>
+                            <hr />
+                            <div>0 ~ 49점 : {mainTeam.name} Rookie Fan ⚾</div>
+                            <div>50 ~ 149점 : {mainTeam.name} Bronze Fan 🥉</div>
+                            <div>150 ~ 299점 : {mainTeam.name} Silver Fan 🥈</div>
+                            <div>300 ~ 499점 : {mainTeam.name} Gold Fan 🥇</div>
+                            <div>500점 이상 : {mainTeam.name} MVP Fan 🔥</div>
+                        </div>
+                    )}
                 </div>
             </div>
 

@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 function Main() {
     const navigate = useNavigate();
 
-    // DB TEAM 테이블 기준
+    const [popularPostList, setPopularPostList] = useState([]);
+    const [popularTeamList, setPopularTeamList] = useState([]);
+    const [bannerIndex, setBannerIndex] = useState(0);
+
     const teams = [
         { id: 1, name: "LG", icon: "⚡" },
         { id: 2, name: "두산", icon: "🐻" },
@@ -18,6 +21,108 @@ function Main() {
         { id: 10, name: "키움", icon: "🦸" }
     ];
 
+    const banners = [
+        {
+            title: "🎁 SpoTalk 응원 이벤트",
+            text: "게시글 작성하고 좋아요 받으면 인기팬 TOP10 선정!",
+            button: "이벤트 참여하기",
+            link: "/feed"
+        },
+        {
+            title: "⚾ 응원팀 팬 모집중",
+            text: "내 응원팀을 선택하고 팀 게시판에서 팬들과 소통해보세요!",
+            button: "팀 게시판 가기",
+            link: "/team/1"
+        },
+        {
+            title: "🔥 인기글 챌린지",
+            text: "좋아요를 많이 받은 게시글은 메인 인기글에 노출됩니다!",
+            button: "글쓰기",
+            link: "/write"
+        }
+    ];
+
+    function getTeamInfo(teamId) {
+        return teams.find(team => team.id === Number(teamId)) || {
+            id: 0,
+            name: "통합",
+            icon: "⚾"
+        };
+    }
+
+    function fnGetMainData() {
+        fetch("http://localhost:3010/post/list")
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const list = data.list || [];
+
+                    const popularPosts = [...list]
+                        .sort((a, b) => {
+                            const likeDiff =
+                                Number(b.LIKE_CNT || 0) -
+                                Number(a.LIKE_CNT || 0);
+
+                            if (likeDiff !== 0) {
+                                return likeDiff;
+                            }
+
+                            return Number(b.VIEW_CNT || 0) -
+                                Number(a.VIEW_CNT || 0);
+                        })
+                        .slice(0, 5);
+
+                    setPopularPostList(popularPosts);
+
+                    const teamMap = {};
+
+                    list.forEach(post => {
+                        if (post.TEAM_ID) {
+                            const id = Number(post.TEAM_ID);
+
+                            if (!teamMap[id]) {
+                                const teamInfo = getTeamInfo(id);
+
+                                teamMap[id] = {
+                                    teamId: id,
+                                    name: teamInfo.name,
+                                    icon: teamInfo.icon,
+                                    count: 0
+                                };
+                            }
+
+                            teamMap[id].count += 1;
+                        }
+                    });
+
+                    const teamRank = Object.values(teamMap)
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 3);
+
+                    setPopularTeamList(teamRank);
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
+
+    useEffect(() => {
+        fnGetMainData();
+    }, []);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setBannerIndex(prev =>
+                prev === banners.length - 1 ? 0 : prev + 1
+            );
+        }, 3000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    const currentBanner = banners[bannerIndex];
+
     return (
         <div style={pageStyle}>
             <div style={ballStyle1}>⚾</div>
@@ -27,13 +132,9 @@ function Main() {
             <div style={heroStyle}>
                 <div style={logoBallStyle}>⚾</div>
 
-                <h1 style={titleStyle}>
-                    SpoTalk
-                </h1>
+                <h1 style={titleStyle}>SpoTalk</h1>
 
-                <p style={subTitleStyle}>
-                    야구 팬들의 소통 공간
-                </p>
+                <p style={subTitleStyle}>야구 팬들의 소통 공간</p>
 
                 <div style={buttonBoxStyle}>
                     <Link to="/write" style={primaryBtnStyle}>
@@ -44,6 +145,38 @@ function Main() {
                         ☰ 통합게시판
                     </Link>
                 </div>
+            </div>
+
+            <div style={bannerStyle}>
+                <div>
+                    <h2 style={{ margin: 0 }}>
+                        {currentBanner.title}
+                    </h2>
+
+                    <p style={{ marginTop: "10px", marginBottom: 0 }}>
+                        {currentBanner.text}
+                    </p>
+                </div>
+
+                <Link to={currentBanner.link} style={bannerBtnStyle}>
+                    {currentBanner.button} →
+                </Link>
+            </div>
+
+            <div style={bannerDotBoxStyle}>
+                {banners.map((item, idx) => (
+                    <button
+                        key={idx}
+                        onClick={() => setBannerIndex(idx)}
+                        style={{
+                            ...bannerDotStyle,
+                            background:
+                                bannerIndex === idx
+                                    ? "#4A8CFF"
+                                    : "#ffffff"
+                        }}
+                    />
+                ))}
             </div>
 
             <div style={teamSectionStyle}>
@@ -58,56 +191,96 @@ function Main() {
                             style={teamCardStyle}
                             onClick={() => navigate("/team/" + team.id)}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.transform =
-                                    "translateY(-5px)";
-
+                                e.currentTarget.style.transform = "translateY(-5px)";
                                 e.currentTarget.style.boxShadow =
                                     "0 12px 25px rgba(74,140,255,0.25)";
                             }}
                             onMouseLeave={(e) => {
-                                e.currentTarget.style.transform =
-                                    "translateY(0)";
-
+                                e.currentTarget.style.transform = "translateY(0)";
                                 e.currentTarget.style.boxShadow =
                                     "0 6px 15px rgba(0,0,0,0.08)";
                             }}
                         >
-                            <div style={teamIconStyle}>
-                                {team.icon}
-                            </div>
-
-                            <div style={teamNameStyle}>
-                                {team.name}
-                            </div>
+                            <div style={teamIconStyle}>{team.icon}</div>
+                            <div style={teamNameStyle}>{team.name}</div>
                         </div>
                     ))}
                 </div>
             </div>
 
-            <div style={postSectionStyle}>
-                <div style={postHeaderStyle}>
-                    <h3 style={{ margin: 0 }}>
-                        🔥 오늘의 인기글
+            <div style={rankSectionStyle}>
+                <div style={rankCardStyle}>
+                    <h3 style={rankTitleStyle}>
+                        🏆 인기팀 TOP3
                     </h3>
 
-                    <Link to="/feed" style={moreStyle}>
-                        더보기 〉
-                    </Link>
+                    {popularTeamList.length === 0 ? (
+                        <div style={postItemStyle}>
+                            팀 게시글이 없습니다.
+                            <span>0개</span>
+                        </div>
+                    ) : (
+                        popularTeamList.map((team, idx) => (
+                            <div
+                                key={team.teamId}
+                                style={postItemStyle}
+                                onClick={() => navigate("/team/" + team.teamId)}
+                            >
+                                <span>
+                                    {idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉"}
+                                    {" "}
+                                    {team.icon} {team.name}
+                                </span>
+
+                                <span>
+                                    {team.count}개
+                                </span>
+                            </div>
+                        ))
+                    )}
                 </div>
 
-                <div style={postItemStyle}>
-                    ⚾ 짜릿한 끝내기 역전승! 오늘 경기 직관 후기
-                    <span>💙 128</span>
-                </div>
+                <div style={rankCardStyle}>
+                    <div style={postHeaderStyle}>
+                        <h3 style={{ margin: 0 }}>
+                            🔥 인기글 TOP5
+                        </h3>
 
-                <div style={postItemStyle}>
-                    🏆 올해 우승은 우리팀이다!!
-                    <span>💙 96</span>
-                </div>
+                        <Link to="/feed" style={moreStyle}>
+                            더보기 〉
+                        </Link>
+                    </div>
 
-                <div style={postItemStyle}>
-                    📣 선발 라인업 분석 및 경기 전망
-                    <span>💙 75</span>
+                    {popularPostList.length === 0 ? (
+                        <div style={postItemStyle}>
+                            아직 게시글이 없습니다.
+                            <span>💙 0</span>
+                        </div>
+                    ) : (
+                        popularPostList.map((item, idx) => (
+                            <Link
+                                key={item.POST_ID}
+                                to={"/post/" + item.POST_ID}
+                                style={{
+                                    ...postItemStyle,
+                                    textDecoration: "none",
+                                    color: "#17406F"
+                                }}
+                            >
+                                <span>
+                                    {idx + 1}. {item.TITLE}
+                                    {" "}
+                                    <span style={{ color: "#1976d2" }}>
+                                        [{item.COMMENT_CNT || 0}]
+                                    </span>
+                                </span>
+
+                                <span>
+                                    💙 {item.LIKE_CNT}
+                                </span>
+                            </Link>
+                        ))
+                    )}
                 </div>
             </div>
         </div>
@@ -204,6 +377,48 @@ const whiteBtnStyle = {
     boxShadow: "0 6px 15px rgba(74,140,255,0.18)"
 };
 
+const bannerStyle = {
+    width: "95%",
+    maxWidth: "1200px",
+    margin: "20px auto 8px",
+    background: "linear-gradient(90deg,#4A8CFF,#79B8FF)",
+    color: "white",
+    borderRadius: "24px",
+    padding: "25px 35px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    boxShadow: "0 10px 25px rgba(74,140,255,0.25)",
+    position: "relative",
+    zIndex: 1
+};
+
+const bannerBtnStyle = {
+    background: "white",
+    color: "#4A8CFF",
+    padding: "12px 20px",
+    borderRadius: "12px",
+    textDecoration: "none",
+    fontWeight: "bold"
+};
+
+const bannerDotBoxStyle = {
+    display: "flex",
+    justifyContent: "center",
+    gap: "8px",
+    marginBottom: "16px",
+    position: "relative",
+    zIndex: 1
+};
+
+const bannerDotStyle = {
+    width: "10px",
+    height: "10px",
+    borderRadius: "50%",
+    border: "1px solid #4A8CFF",
+    cursor: "pointer"
+};
+
 const teamSectionStyle = {
     width: "95%",
     maxWidth: "1200px",
@@ -252,16 +467,27 @@ const teamNameStyle = {
     fontSize: "16px"
 };
 
-const postSectionStyle = {
+const rankSectionStyle = {
     width: "95%",
     maxWidth: "1200px",
     margin: "20px auto",
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "20px",
+    position: "relative",
+    zIndex: 1
+};
+
+const rankCardStyle = {
     background: "rgba(255,255,255,0.7)",
     borderRadius: "24px",
     padding: "25px",
-    boxShadow: "0 10px 30px rgba(74,140,255,0.18)",
-    position: "relative",
-    zIndex: 1
+    boxShadow: "0 10px 30px rgba(74,140,255,0.18)"
+};
+
+const rankTitleStyle = {
+    marginTop: 0,
+    marginBottom: "16px"
 };
 
 const postHeaderStyle = {
@@ -284,7 +510,8 @@ const postItemStyle = {
     marginBottom: "10px",
     display: "flex",
     justifyContent: "space-between",
-    fontSize: "15px"
+    fontSize: "15px",
+    cursor: "pointer"
 };
 
 export default Main;

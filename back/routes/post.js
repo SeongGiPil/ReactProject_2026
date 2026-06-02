@@ -14,15 +14,11 @@ const router = express.Router();
 // multer 이미지 업로드 설정
 // =========================
 
-// 이미지 저장 설정
 const storage = multer.diskStorage({
-
-    // 이미지 저장 폴더
     destination: function (req, file, cb) {
         cb(null, "uploads/");
     },
 
-    // 저장될 파일명
     filename: function (req, file, cb) {
         const ext = path.extname(file.originalname);
 
@@ -33,7 +29,6 @@ const storage = multer.diskStorage({
     }
 });
 
-// images라는 이름으로 최대 5장 업로드 가능
 const upload = multer({ storage });
 
 
@@ -50,7 +45,6 @@ router.post("/add", upload.array("images", 5), async (req, res) => {
     try {
         conn = await db.getConnection();
 
-        // 게시글 번호 먼저 생성
         const seqResult = await conn.execute(
             `
             SELECT SEQ_POST.NEXTVAL AS POST_ID
@@ -64,7 +58,6 @@ router.post("/add", upload.array("images", 5), async (req, res) => {
 
         const postId = seqResult.rows[0].POST_ID;
 
-        // 게시글 저장
         await conn.execute(
             `
             INSERT INTO POST (
@@ -94,7 +87,6 @@ router.post("/add", upload.array("images", 5), async (req, res) => {
             }
         );
 
-        // 이미지 저장
         if (req.files && req.files.length > 0) {
             for (let i = 0; i < req.files.length; i++) {
                 const file = req.files[i];
@@ -152,6 +144,7 @@ router.post("/add", upload.array("images", 5), async (req, res) => {
 // =========================
 // 통합 게시글 목록 조회
 // GET /post/list
+// 작성자 팬등급 계산용 통계 + 댓글 수 포함
 // =========================
 
 router.get("/list", async (req, res) => {
@@ -171,9 +164,48 @@ router.get("/list", async (req, res) => {
                 P.TEAM_ID,
                 NVL(P.VIEW_CNT, 0) AS VIEW_CNT,
                 NVL(P.LIKE_CNT, 0) AS LIKE_CNT,
+
+                (
+                    SELECT COUNT(*)
+                    FROM POST_COMMENT CMT
+                    WHERE CMT.POST_ID = P.POST_ID
+                    AND CMT.COMMENT_STATUS = 'NORMAL'
+                ) AS COMMENT_CNT,
+
                 P.POST_STATUS,
                 P.CDATETIME,
-                I.IMG_PATH AS MAIN_IMG
+                I.IMG_PATH AS MAIN_IMG,
+
+                (
+                    SELECT COUNT(*)
+                    FROM POST P2
+                    WHERE P2.USER_ID = P.USER_ID
+                    AND P2.POST_STATUS = 'NORMAL'
+                ) AS WRITER_POST_CNT,
+
+                (
+                    SELECT COUNT(*)
+                    FROM POST_COMMENT C
+                    WHERE C.USER_ID = P.USER_ID
+                    AND C.COMMENT_STATUS = 'NORMAL'
+                ) AS WRITER_COMMENT_CNT,
+
+                (
+                    SELECT NVL(SUM(P3.LIKE_CNT), 0)
+                    FROM POST P3
+                    WHERE P3.USER_ID = P.USER_ID
+                    AND P3.POST_STATUS = 'NORMAL'
+                ) AS WRITER_LIKE_CNT,
+
+                (
+                    SELECT T.TEAM_NAME
+                    FROM USER_TEAM UT
+                    JOIN TEAM T
+                        ON UT.TEAM_ID = T.TEAM_ID
+                    WHERE UT.USER_ID = P.USER_ID
+                    AND ROWNUM = 1
+                ) AS WRITER_TEAM_NAME
+
             FROM POST P
             LEFT JOIN POST_IMAGE I
                 ON P.POST_ID = I.POST_ID
@@ -209,6 +241,7 @@ router.get("/list", async (req, res) => {
 // =========================
 // 팀 게시글 목록 조회
 // GET /post/team/:teamId
+// 작성자 팬등급 계산용 통계 + 댓글 수 포함
 // =========================
 
 router.get("/team/:teamId", async (req, res) => {
@@ -230,9 +263,48 @@ router.get("/team/:teamId", async (req, res) => {
                 P.TEAM_ID,
                 NVL(P.VIEW_CNT, 0) AS VIEW_CNT,
                 NVL(P.LIKE_CNT, 0) AS LIKE_CNT,
+
+                (
+                    SELECT COUNT(*)
+                    FROM POST_COMMENT CMT
+                    WHERE CMT.POST_ID = P.POST_ID
+                    AND CMT.COMMENT_STATUS = 'NORMAL'
+                ) AS COMMENT_CNT,
+
                 P.POST_STATUS,
                 P.CDATETIME,
-                I.IMG_PATH AS MAIN_IMG
+                I.IMG_PATH AS MAIN_IMG,
+
+                (
+                    SELECT COUNT(*)
+                    FROM POST P2
+                    WHERE P2.USER_ID = P.USER_ID
+                    AND P2.POST_STATUS = 'NORMAL'
+                ) AS WRITER_POST_CNT,
+
+                (
+                    SELECT COUNT(*)
+                    FROM POST_COMMENT C
+                    WHERE C.USER_ID = P.USER_ID
+                    AND C.COMMENT_STATUS = 'NORMAL'
+                ) AS WRITER_COMMENT_CNT,
+
+                (
+                    SELECT NVL(SUM(P3.LIKE_CNT), 0)
+                    FROM POST P3
+                    WHERE P3.USER_ID = P.USER_ID
+                    AND P3.POST_STATUS = 'NORMAL'
+                ) AS WRITER_LIKE_CNT,
+
+                (
+                    SELECT T.TEAM_NAME
+                    FROM USER_TEAM UT
+                    JOIN TEAM T
+                        ON UT.TEAM_ID = T.TEAM_ID
+                    WHERE UT.USER_ID = P.USER_ID
+                    AND ROWNUM = 1
+                ) AS WRITER_TEAM_NAME
+
             FROM POST P
             LEFT JOIN POST_IMAGE I
                 ON P.POST_ID = I.POST_ID
@@ -271,6 +343,7 @@ router.get("/team/:teamId", async (req, res) => {
 // =========================
 // 게시글 상세 조회
 // GET /post/view/:postId
+// 작성자 팬등급 계산용 통계 포함
 // =========================
 
 router.get("/view/:postId", async (req, res) => {
@@ -281,7 +354,6 @@ router.get("/view/:postId", async (req, res) => {
     try {
         conn = await db.getConnection();
 
-        // 조회수 증가
         await conn.execute(
             `
             UPDATE POST
@@ -292,23 +364,53 @@ router.get("/view/:postId", async (req, res) => {
             { postId }
         );
 
-        // 게시글 상세 조회
         const result = await conn.execute(
             `
             SELECT
-                POST_ID,
-                USER_ID,
-                TITLE,
-                DBMS_LOB.SUBSTR(CONTENT, 4000, 1) AS CONTENT,
-                POST_TYPE,
-                TEAM_ID,
-                NVL(VIEW_CNT, 0) AS VIEW_CNT,
-                NVL(LIKE_CNT, 0) AS LIKE_CNT,
-                POST_STATUS,
-                CDATETIME
-            FROM POST
-            WHERE POST_ID = :postId
-            AND POST_STATUS = 'NORMAL'
+                P.POST_ID,
+                P.USER_ID,
+                P.TITLE,
+                DBMS_LOB.SUBSTR(P.CONTENT, 4000, 1) AS CONTENT,
+                P.POST_TYPE,
+                P.TEAM_ID,
+                NVL(P.VIEW_CNT, 0) AS VIEW_CNT,
+                NVL(P.LIKE_CNT, 0) AS LIKE_CNT,
+                P.POST_STATUS,
+                P.CDATETIME,
+
+                (
+                    SELECT COUNT(*)
+                    FROM POST P2
+                    WHERE P2.USER_ID = P.USER_ID
+                    AND P2.POST_STATUS = 'NORMAL'
+                ) AS WRITER_POST_CNT,
+
+                (
+                    SELECT COUNT(*)
+                    FROM POST_COMMENT C
+                    WHERE C.USER_ID = P.USER_ID
+                    AND C.COMMENT_STATUS = 'NORMAL'
+                ) AS WRITER_COMMENT_CNT,
+
+                (
+                    SELECT NVL(SUM(P3.LIKE_CNT), 0)
+                    FROM POST P3
+                    WHERE P3.USER_ID = P.USER_ID
+                    AND P3.POST_STATUS = 'NORMAL'
+                ) AS WRITER_LIKE_CNT,
+
+                (
+                    SELECT T.TEAM_NAME
+                    FROM USER_TEAM UT
+                    JOIN TEAM T
+                        ON UT.TEAM_ID = T.TEAM_ID
+                    WHERE UT.USER_ID = P.USER_ID
+                    AND ROWNUM = 1
+                ) AS WRITER_TEAM_NAME
+
+            FROM POST P
+            WHERE P.POST_ID = :postId
+            AND P.POST_STATUS = 'NORMAL'
             `,
             { postId },
             {
@@ -316,7 +418,6 @@ router.get("/view/:postId", async (req, res) => {
             }
         );
 
-        // 게시글 이미지 조회
         const imgResult = await conn.execute(
             `
             SELECT
@@ -376,7 +477,6 @@ router.put("/update/:postId", jwtAuthentication, async (req, res) => {
     const { postId } = req.params;
     const { title, content, postType, teamId } = req.body;
 
-    // JWT에서 로그인 사용자 아이디 가져옴
     const userId = req.user.userId;
 
     let conn;
@@ -436,13 +536,10 @@ router.put("/update/:postId", jwtAuthentication, async (req, res) => {
 // DELETE /post/delete/:postId
 // JWT 필요
 // 작성자 본인만 삭제 가능
-// 실제 DELETE가 아니라 POST_STATUS='DEL' 처리
 // =========================
 
 router.delete("/delete/:postId", jwtAuthentication, async (req, res) => {
     const { postId } = req.params;
-
-    // JWT에서 로그인 사용자 아이디 가져옴
     const userId = req.user.userId;
 
     let conn;
@@ -511,6 +608,14 @@ router.get("/my/:userId", async (req, res) => {
                 TEAM_ID,
                 NVL(VIEW_CNT, 0) AS VIEW_CNT,
                 NVL(LIKE_CNT, 0) AS LIKE_CNT,
+
+                (
+                    SELECT COUNT(*)
+                    FROM POST_COMMENT CMT
+                    WHERE CMT.POST_ID = POST.POST_ID
+                    AND CMT.COMMENT_STATUS = 'NORMAL'
+                ) AS COMMENT_CNT,
+
                 CDATETIME
             FROM POST
             WHERE USER_ID = :userId

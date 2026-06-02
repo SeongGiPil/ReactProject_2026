@@ -5,7 +5,13 @@ const { jwtAuthentication } = require("../auth");
 
 const router = express.Router();
 
+
+// =========================
 // 댓글 목록 조회
+// GET /comment/:postId
+// 댓글 작성자 팬등급 계산용 데이터 포함
+// =========================
+
 router.get("/:postId", async (req, res) => {
     const { postId } = req.params;
     let conn;
@@ -23,7 +29,38 @@ router.get("/:postId", async (req, res) => {
                 C.PARENT_ID,
                 DBMS_LOB.SUBSTR(C.CONTENT, 4000, 1) AS CONTENT,
                 C.COMMENT_STATUS,
-                TO_CHAR(C.CDATETIME, 'YYYY-MM-DD HH24:MI') AS CDATETIME
+                TO_CHAR(C.CDATETIME, 'YYYY-MM-DD HH24:MI') AS CDATETIME,
+
+                (
+                    SELECT COUNT(*)
+                    FROM POST P
+                    WHERE P.USER_ID = C.USER_ID
+                    AND P.POST_STATUS = 'NORMAL'
+                ) AS WRITER_POST_CNT,
+
+                (
+                    SELECT COUNT(*)
+                    FROM POST_COMMENT C2
+                    WHERE C2.USER_ID = C.USER_ID
+                    AND C2.COMMENT_STATUS = 'NORMAL'
+                ) AS WRITER_COMMENT_CNT,
+
+                (
+                    SELECT NVL(SUM(P2.LIKE_CNT), 0)
+                    FROM POST P2
+                    WHERE P2.USER_ID = C.USER_ID
+                    AND P2.POST_STATUS = 'NORMAL'
+                ) AS WRITER_LIKE_CNT,
+
+                (
+                    SELECT T.TEAM_NAME
+                    FROM USER_TEAM UT
+                    JOIN TEAM T
+                        ON UT.TEAM_ID = T.TEAM_ID
+                    WHERE UT.USER_ID = C.USER_ID
+                    AND ROWNUM = 1
+                ) AS WRITER_TEAM_NAME
+
             FROM POST_COMMENT C
             JOIN USERS U
                 ON C.USER_ID = U.USER_ID
@@ -53,9 +90,17 @@ router.get("/:postId", async (req, res) => {
     }
 });
 
+
+// =========================
 // 댓글 등록
+// POST /comment
+// JWT 필요
+// =========================
+
 router.post("/", jwtAuthentication, async (req, res) => {
     const { postId, content, parentId } = req.body;
+
+    // JWT에서 로그인 사용자 아이디 가져오기
     const userId = req.user.userId;
 
     let conn;
@@ -119,9 +164,19 @@ router.post("/", jwtAuthentication, async (req, res) => {
     }
 });
 
+
+// =========================
 // 댓글 삭제
+// DELETE /comment/:commentId
+// JWT 필요
+// 작성자 본인만 삭제 가능
+// 실제 삭제가 아니라 COMMENT_STATUS = 'DEL'
+// =========================
+
 router.delete("/:commentId", jwtAuthentication, async (req, res) => {
     const { commentId } = req.params;
+
+    // JWT에서 로그인 사용자 아이디 가져오기
     const userId = req.user.userId;
 
     let conn;
@@ -168,5 +223,6 @@ router.delete("/:commentId", jwtAuthentication, async (req, res) => {
         if (conn) await conn.close();
     }
 });
+
 
 module.exports = router;

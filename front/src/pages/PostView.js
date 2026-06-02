@@ -3,42 +3,52 @@ import { useParams, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 function PostView() {
-    // URL의 postId 값 가져오기
     const { postId } = useParams();
-
-    // 페이지 이동 함수
     const navigate = useNavigate();
 
-    // 게시글 정보
     const [post, setPost] = useState({});
-
-    // 게시글 이미지 목록
     const [images, setImages] = useState([]);
-
-    // 수정 모드 여부
     const [isEdit, setIsEdit] = useState(false);
 
-    // 수정용 제목 / 내용
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
 
-    // 댓글 목록 / 입력 댓글
     const [commentList, setCommentList] = useState([]);
     const [comment, setComment] = useState("");
 
-    // 좋아요 수 / 좋아요 여부
     const [likeCnt, setLikeCnt] = useState(0);
     const [isLiked, setIsLiked] = useState(false);
 
-    // 로그인 토큰
     const token = localStorage.getItem("token");
-
-    // 현재 로그인 사용자
     const currentUser = token ? jwtDecode(token) : null;
 
-    // =========================
-    // 게시글 상세 조회
-    // =========================
+    function getTeamIcon(teamName) {
+        if (teamName === "두산") return "🐻";
+        if (teamName === "LG") return "⚡";
+        if (teamName === "SSG") return "🚀";
+        if (teamName === "KIA") return "🐯";
+        if (teamName === "삼성") return "🦁";
+        if (teamName === "롯데") return "⚓";
+        if (teamName === "한화") return "🦅";
+        if (teamName === "KT") return "🧙";
+        if (teamName === "NC") return "🦖";
+        if (teamName === "키움") return "🦸";
+        return "⚾";
+    }
+
+    function getFanGrade(item) {
+        const score =
+            Number(item.WRITER_POST_CNT || 0) * 5 +
+            Number(item.WRITER_COMMENT_CNT || 0) * 2 +
+            Number(item.WRITER_LIKE_CNT || 0);
+
+        if (score >= 500) return "MVP Fan";
+        if (score >= 300) return "Gold Fan";
+        if (score >= 150) return "Silver Fan";
+        if (score >= 50) return "Bronze Fan";
+        return "Rookie Fan";
+    }
+
     function fnGetPost() {
         fetch("http://localhost:3010/post/view/" + postId)
             .then(res => res.json())
@@ -58,10 +68,6 @@ function PostView() {
             });
     }
 
-    // =========================
-    // 게시글 수정
-    // JWT 토큰 필요
-    // =========================
     function fnUpdate() {
         if (!title.trim() || !content.trim()) {
             alert("제목과 내용을 입력하세요.");
@@ -107,10 +113,6 @@ function PostView() {
             });
     }
 
-    // =========================
-    // 게시글 삭제
-    // JWT 토큰 필요
-    // =========================
     function fnDelete() {
         if (!window.confirm("정말 삭제하시겠습니까?")) {
             return;
@@ -142,9 +144,42 @@ function PostView() {
             });
     }
 
-    // =========================
-    // 댓글 목록 조회
-    // =========================
+    function fnReport() {
+        if (!token) {
+            alert("로그인 후 이용 가능합니다.");
+            return;
+        }
+
+        const reason = prompt(
+            "신고 사유를 입력하세요.\n\n욕설\n광고\n도배\n부적절한 내용\n기타"
+        );
+
+        if (!reason) {
+            return;
+        }
+
+        fetch("http://localhost:3010/report", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token
+            },
+            body: JSON.stringify({
+                targetType: "POST",
+                targetId: postId,
+                reason
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch(err => {
+                console.log(err);
+                alert("신고 실패");
+            });
+    }
+
     function fnGetCommentList() {
         fetch("http://localhost:3010/comment/" + postId)
             .then(res => res.json())
@@ -157,13 +192,8 @@ function PostView() {
             });
     }
 
-    // =========================
-    // 좋아요 상태 조회
-    // =========================
     function fnGetLike() {
-        if (!token) {
-            return;
-        }
+        if (!token) return;
 
         fetch("http://localhost:3010/like/" + postId, {
             method: "GET",
@@ -178,14 +208,9 @@ function PostView() {
                     setIsLiked(data.info.IS_LIKED === "Y");
                 }
             })
-            .catch(err => {
-                console.log(err);
-            });
+            .catch(err => console.log(err));
     }
 
-    // =========================
-    // 좋아요 등록 / 취소
-    // =========================
     function fnToggleLike() {
         if (!token) {
             alert("로그인 후 이용 가능합니다.");
@@ -214,9 +239,6 @@ function PostView() {
             });
     }
 
-    // =========================
-    // 댓글 등록
-    // =========================
     function fnAddComment() {
         if (!token) {
             alert("로그인 후 이용 가능합니다.");
@@ -255,9 +277,6 @@ function PostView() {
             });
     }
 
-    // =========================
-    // 댓글 삭제
-    // =========================
     function fnDeleteComment(commentId) {
         if (!window.confirm("댓글을 삭제하시겠습니까?")) {
             return;
@@ -280,12 +299,10 @@ function PostView() {
             });
     }
 
-    // 날짜 포맷
     function fnDateFormat(date) {
         return new Date(date).toLocaleString("ko-KR");
     }
 
-    // 화면 처음 열릴 때 실행
     useEffect(() => {
         fnGetPost();
         fnGetCommentList();
@@ -307,6 +324,21 @@ function PostView() {
             <div className="post-info-row">
                 <span>작성자 : {post.USER_ID}</span>
                 <span>조회수 : {post.VIEW_CNT}</span>
+            </div>
+
+            <div
+                style={{
+                    marginTop: "8px",
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    color: "#ff9800"
+                }}
+            >
+                {getTeamIcon(post.WRITER_TEAM_NAME)}
+                {" "}
+                {post.WRITER_TEAM_NAME || "통합"}
+                {" "}
+                {getFanGrade(post)}
             </div>
 
             <div className="post-stats">
@@ -350,6 +382,13 @@ function PostView() {
                     onClick={fnToggleLike}
                 >
                     {isLiked ? "❤️" : "🤍"} 좋아요 {likeCnt}
+                </button>
+
+                <button
+                    className="report-btn"
+                    onClick={fnReport}
+                >
+                    🚨 신고
                 </button>
 
                 {currentUser?.userId === post.USER_ID && (
@@ -402,7 +441,25 @@ function PostView() {
                 commentList.map(item => (
                     <div key={item.COMMENT_ID} className="comment-card">
                         <div className="comment-header">
-                            <strong>{item.NICKNAME}</strong>
+                            <div>
+                                <strong>{item.NICKNAME}</strong>
+
+                                <div
+                                    style={{
+                                        fontSize: "12px",
+                                        color: "#ff9800",
+                                        fontWeight: "bold",
+                                        marginTop: "3px"
+                                    }}
+                                >
+                                    {getTeamIcon(item.WRITER_TEAM_NAME)}
+                                    {" "}
+                                    {item.WRITER_TEAM_NAME || "통합"}
+                                    {" "}
+                                    {getFanGrade(item)}
+                                </div>
+                            </div>
+
                             <small>{item.CDATETIME}</small>
                         </div>
 

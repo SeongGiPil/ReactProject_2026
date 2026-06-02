@@ -78,6 +78,41 @@ function Login() {
                     로그인
                 </button>
 
+                <div
+                    style={{
+                        marginTop: "15px",
+                        textAlign: "center"
+                    }}
+                >
+                    <Link
+                        to="/find-id"
+                        style={{
+                            textDecoration: "none",
+                            color: "#1976d2",
+                            fontWeight: "bold"
+                        }}
+                    >
+                        아이디 찾기
+                    </Link>
+
+                    <span style={{ margin: "0 10px" }}>
+                        |
+                    </span>
+
+                    <Link
+                        to="/reset-password"
+                        style={{
+                            textDecoration: "none",
+                            color: "#1976d2",
+                            fontWeight: "bold"
+                        }}
+                    >
+                        비밀번호 재설정
+                    </Link>
+                </div>
+
+
+
                 <div className="auth-link-box">
                     아직 계정이 없나요?{" "}
                     <Link to="/join">

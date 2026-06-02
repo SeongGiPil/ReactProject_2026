@@ -128,10 +128,18 @@ router.get("/check/:userId", async (req, res) => {
 // =========================
 // 회원가입
 // POST /user/join
+// USERS 저장 + USER_TEAM 저장
 // =========================
 
 router.post("/join", async (req, res) => {
-    const { userId, pwd, nickname, email } = req.body;
+    const {
+        userId,
+        pwd,
+        nickname,
+        email,
+        teamList
+    } = req.body;
+
     let conn;
 
     try {
@@ -159,11 +167,38 @@ router.post("/join", async (req, res) => {
                 pwd: hashPwd,
                 nickname,
                 email
-            },
-            {
-                autoCommit: true
             }
         );
+
+        // 회원가입 시 선택한 응원팀 저장
+        const newTeamList = Array.isArray(teamList) ? teamList : [];
+
+        if (newTeamList.length > 0) {
+            const uniqueTeamList = [...new Set(newTeamList)];
+
+            for (let i = 0; i < uniqueTeamList.length; i++) {
+                await conn.execute(
+                    `
+                    INSERT INTO USER_TEAM (
+                        USER_ID,
+                        TEAM_ID,
+                        CDATETIME
+                    )
+                    VALUES (
+                        :userId,
+                        :teamId,
+                        SYSDATE
+                    )
+                    `,
+                    {
+                        userId,
+                        teamId: Number(uniqueTeamList[i])
+                    }
+                );
+            }
+        }
+
+        await conn.commit();
 
         res.json({
             success: true,
@@ -171,11 +206,13 @@ router.post("/join", async (req, res) => {
         });
 
     } catch (err) {
-        console.log(err);
+        console.log("회원가입 에러 :", err);
+
+        if (conn) await conn.rollback();
 
         res.status(500).json({
             success: false,
-            message: "회원가입 실패"
+            message: err.message
         });
 
     } finally {
@@ -332,7 +369,6 @@ router.get("/stats/:userId", async (req, res) => {
 // =========================
 // 내가 작성한 댓글 목록
 // GET /user/my-comments/:userId
-// 반드시 /:userId 보다 위에 있어야 함
 // =========================
 
 router.get("/my-comments/:userId", async (req, res) => {
@@ -386,7 +422,6 @@ router.get("/my-comments/:userId", async (req, res) => {
 // =========================
 // 내가 좋아요한 게시글
 // GET /user/my-likes/:userId
-// 반드시 /:userId 보다 위에 있어야 함
 // =========================
 
 router.get("/my-likes/:userId", async (req, res) => {
@@ -544,6 +579,197 @@ router.post(
         }
     }
 );
+
+
+// =========================
+// 기본 프로필 이미지 선택
+// PUT /user/profile-select
+// =========================
+
+router.put("/profile-select", async (req, res) => {
+    const { userId, profileImg } = req.body;
+    let conn;
+
+    try {
+        if (!userId) {
+            return res.json({
+                success: false,
+                message: "사용자 정보가 없습니다."
+            });
+        }
+
+        if (!profileImg) {
+            return res.json({
+                success: false,
+                message: "선택한 프로필 이미지가 없습니다."
+            });
+        }
+
+        conn = await db.getConnection();
+
+        await conn.execute(
+            `
+            UPDATE USERS
+            SET PROFILE_IMG = :profileImg
+            WHERE USER_ID = :userId
+            `,
+            {
+                profileImg,
+                userId
+            },
+            {
+                autoCommit: true
+            }
+        );
+
+        res.json({
+            success: true,
+            message: "프로필 이미지가 변경되었습니다.",
+            profileImg
+        });
+
+    } catch (err) {
+        console.log("기본 프로필 이미지 선택 에러 :", err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    } finally {
+        if (conn) await conn.close();
+    }
+});
+
+
+// =========================
+// 아이디 찾기
+// POST /user/find-id
+// 닉네임 + 이메일로 아이디 조회
+// =========================
+
+router.post("/find-id", async (req, res) => {
+    const { nickname, email } = req.body;
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        const result = await conn.execute(
+            `
+            SELECT USER_ID
+            FROM USERS
+            WHERE NICKNAME = :nickname
+            AND EMAIL = :email
+            AND USER_STATUS = 'NORMAL'
+            `,
+            {
+                nickname,
+                email
+            },
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
+        );
+
+        if (result.rows.length === 0) {
+            return res.json({
+                success: false,
+                message: "일치하는 회원정보가 없습니다."
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "아이디 찾기 성공",
+            userId: result.rows[0].USER_ID
+        });
+
+    } catch (err) {
+        console.log("아이디 찾기 에러 :", err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    } finally {
+        if (conn) await conn.close();
+    }
+});
+
+
+// =========================
+// 비밀번호 재설정
+// POST /user/reset-password
+// 아이디 + 이메일 확인 후 새 비밀번호 저장
+// =========================
+
+router.post("/reset-password", async (req, res) => {
+    const { userId, email, newPwd } = req.body;
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        const check = await conn.execute(
+            `
+            SELECT USER_ID
+            FROM USERS
+            WHERE USER_ID = :userId
+            AND EMAIL = :email
+            AND USER_STATUS = 'NORMAL'
+            `,
+            {
+                userId,
+                email
+            },
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
+        );
+
+        if (check.rows.length === 0) {
+            return res.json({
+                success: false,
+                message: "일치하는 회원정보가 없습니다."
+            });
+        }
+
+        const hashPwd = await bcrypt.hash(newPwd, 10);
+
+        await conn.execute(
+            `
+            UPDATE USERS
+            SET USER_PWD = :newPwd
+            WHERE USER_ID = :userId
+            `,
+            {
+                newPwd: hashPwd,
+                userId
+            },
+            {
+                autoCommit: true
+            }
+        );
+
+        res.json({
+            success: true,
+            message: "비밀번호가 재설정되었습니다."
+        });
+
+    } catch (err) {
+        console.log("비밀번호 재설정 에러 :", err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    } finally {
+        if (conn) await conn.close();
+    }
+});
 
 
 // =========================

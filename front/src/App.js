@@ -15,6 +15,9 @@ import Menu from './components/Menu';
 import Login from './pages/Login';
 import Join from './pages/Join';
 
+import FindId from './pages/FindId';
+import ResetPassword from './pages/ResetPassword';
+
 //마이페이지
 import MyPage from './pages/MyPage';
 //피드작성페이지
@@ -25,6 +28,10 @@ import Feed from './pages/Feed';
 import PostView from './pages/PostView';
 import TeamBoard from "./pages/TeamBoard";
 
+import AdminReport from './pages/AdminReport';
+
+
+
 function App() {
 
   // 현재 URL 경로 정보
@@ -33,7 +40,9 @@ function App() {
   // 로그인, 회원가입 페이지 여부 확인
   const isAuthPage =
     location.pathname === '/' ||
-    location.pathname === '/join';
+    location.pathname === '/join' ||
+    location.pathname === '/find-id' ||
+    location.pathname === '/reset-password';
 
   // 로그인 시 저장한 JWT 토큰 가져오기
   const token = localStorage.getItem("token");
@@ -69,6 +78,18 @@ function App() {
             path="/join"
             element={<Join />}
           />
+
+          <Route
+            path="/find-id"
+            element={<FindId />}
+          />
+
+          <Route
+            path="/reset-password"
+            element={<ResetPassword />}
+          />
+
+
 
           {/* 메인 페이지
               토큰이 있으면 Main 출력
@@ -122,6 +143,11 @@ function App() {
             path="/post/:postId"
             element={token ? <PostView /> : <Navigate to="/" />}
           />
+          <Route
+            path="/admin/report"
+            element={token ? <AdminReport /> : <Navigate to="/" />}
+          />
+
 
 
 
