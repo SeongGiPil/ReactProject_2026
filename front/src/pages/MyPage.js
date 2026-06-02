@@ -8,11 +8,12 @@ function MyPage() {
     const [profileFile, setProfileFile] = useState(null);
 
     const [myPostList, setMyPostList] = useState([]);
+    const [myCommentList, setMyCommentList] = useState([]);
+    const [myLikeList, setMyLikeList] = useState([]);
 
     const [teamList, setTeamList] = useState([]);
     const [selectedTeams, setSelectedTeams] = useState([]);
 
-    // 활동 통계
     const [stats, setStats] = useState({
         POST_CNT: 0,
         COMMENT_CNT: 0,
@@ -27,8 +28,13 @@ function MyPage() {
         return type;
     }
 
+    function getLoginUser() {
+        return JSON.parse(localStorage.getItem("user"));
+    }
+
     function fnGetUser() {
-        const loginUser = JSON.parse(localStorage.getItem("user"));
+        const loginUser = getLoginUser();
+        if (!loginUser) return;
 
         fetch("http://localhost:3010/user/" + loginUser.USER_ID)
             .then(res => res.json())
@@ -47,13 +53,43 @@ function MyPage() {
 
     function fnGetMyPost() {
         const token = localStorage.getItem("token");
+        if (!token) return;
+
         const decoded = jwtDecode(token);
 
         fetch("http://localhost:3010/post/my/" + decoded.userId)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    setMyPostList(data.list);
+                    setMyPostList(data.list || []);
+                }
+            })
+            .catch(err => console.log(err));
+    }
+
+    function fnGetMyComment() {
+        const loginUser = getLoginUser();
+        if (!loginUser) return;
+
+        fetch("http://localhost:3010/user/my-comments/" + loginUser.USER_ID)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setMyCommentList(data.list || []);
+                }
+            })
+            .catch(err => console.log(err));
+    }
+
+    function fnGetMyLikePost() {
+        const loginUser = getLoginUser();
+        if (!loginUser) return;
+
+        fetch("http://localhost:3010/user/my-likes/" + loginUser.USER_ID)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setMyLikeList(data.list || []);
                 }
             })
             .catch(err => console.log(err));
@@ -64,7 +100,7 @@ function MyPage() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    setTeamList(data.list);
+                    setTeamList(data.list || []);
                 }
             })
             .catch(err => {
@@ -74,7 +110,8 @@ function MyPage() {
     }
 
     function fnGetMyTeam() {
-        const loginUser = JSON.parse(localStorage.getItem("user"));
+        const loginUser = getLoginUser();
+        if (!loginUser) return;
 
         fetch("http://localhost:3010/team/my/" + loginUser.USER_ID)
             .then(res => res.json())
@@ -88,7 +125,8 @@ function MyPage() {
     }
 
     function fnGetStats() {
-        const loginUser = JSON.parse(localStorage.getItem("user"));
+        const loginUser = getLoginUser();
+        if (!loginUser) return;
 
         fetch("http://localhost:3010/user/stats/" + loginUser.USER_ID)
             .then(res => res.json())
@@ -102,14 +140,9 @@ function MyPage() {
 
     function fnTeamCheck(teamId) {
         if (selectedTeams.includes(teamId)) {
-            setSelectedTeams(
-                selectedTeams.filter(id => id !== teamId)
-            );
+            setSelectedTeams(selectedTeams.filter(id => id !== teamId));
         } else {
-            setSelectedTeams([
-                ...selectedTeams,
-                teamId
-            ]);
+            setSelectedTeams([...selectedTeams, teamId]);
         }
     }
 
@@ -206,6 +239,8 @@ function MyPage() {
     useEffect(() => {
         fnGetUser();
         fnGetMyPost();
+        fnGetMyComment();
+        fnGetMyLikePost();
         fnGetTeamList();
         fnGetMyTeam();
         fnGetStats();
@@ -223,34 +258,24 @@ function MyPage() {
                         src={
                             user.PROFILE_IMG
                                 ? "http://localhost:3010" + user.PROFILE_IMG
-                                : "https://via.placeholder.com/100"
+                                : ""
                         }
                         alt="프로필"
                         className="profile-img"
                     />
 
                     <div className="profile-info">
-                        <div className="profile-name">
-                            {user.NICKNAME}
-                        </div>
-
-                        <div className="profile-email">
-                            {user.EMAIL}
-                        </div>
+                        <div className="profile-name">{user.NICKNAME}</div>
+                        <div className="profile-email">{user.EMAIL}</div>
 
                         <div className="profile-upload-area">
                             <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) =>
-                                    setProfileFile(e.target.files[0])
-                                }
+                                onChange={(e) => setProfileFile(e.target.files[0])}
                             />
 
-                            <button
-                                className="insert-btn"
-                                onClick={fnProfileUpload}
-                            >
+                            <button className="insert-btn" onClick={fnProfileUpload}>
                                 변경
                             </button>
                         </div>
@@ -291,32 +316,20 @@ function MyPage() {
                 <div className="stats-box">
                     <div className="stats-card">
                         <div className="stats-icon">📝</div>
-                        <div className="stats-value">
-                            {stats.POST_CNT}
-                        </div>
-                        <div className="stats-title">
-                            게시글
-                        </div>
+                        <div className="stats-value">{stats.POST_CNT}</div>
+                        <div className="stats-title">게시글</div>
                     </div>
 
                     <div className="stats-card">
                         <div className="stats-icon">💬</div>
-                        <div className="stats-value">
-                            {stats.COMMENT_CNT}
-                        </div>
-                        <div className="stats-title">
-                            댓글
-                        </div>
+                        <div className="stats-value">{stats.COMMENT_CNT}</div>
+                        <div className="stats-title">댓글</div>
                     </div>
 
                     <div className="stats-card">
                         <div className="stats-icon">❤️</div>
-                        <div className="stats-value">
-                            {stats.TOTAL_LIKE_CNT}
-                        </div>
-                        <div className="stats-title">
-                            받은 좋아요
-                        </div>
+                        <div className="stats-value">{stats.TOTAL_LIKE_CNT}</div>
+                        <div className="stats-title">받은 좋아요</div>
                     </div>
                 </div>
             </div>
@@ -377,9 +390,72 @@ function MyPage() {
                                     <td>{item.VIEW_CNT}</td>
                                     <td>
                                         {item.CDATETIME &&
-                                            new Date(item.CDATETIME)
-                                                .toLocaleDateString("ko-KR")}
+                                            new Date(item.CDATETIME).toLocaleDateString("ko-KR")}
                                     </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="mypage-card">
+                <h3 className="section-title">내 댓글</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>댓글번호</th>
+                            <th>게시글</th>
+                            <th>댓글내용</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {myCommentList.length === 0 ? (
+                            <tr>
+                                <td colSpan="3">작성한 댓글이 없습니다.</td>
+                            </tr>
+                        ) : (
+                            myCommentList.map(item => (
+                                <tr key={item.COMMENT_ID}>
+                                    <td>{item.COMMENT_ID}</td>
+                                    <td>{item.TITLE}</td>
+                                    <td>{item.CONTENT}</td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="mypage-card">
+                <h3 className="section-title">좋아요한 게시글</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>게시글번호</th>
+                            <th>제목</th>
+                            <th>작성자</th>
+                            <th>좋아요</th>
+                            <th>조회수</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {myLikeList.length === 0 ? (
+                            <tr>
+                                <td colSpan="5">좋아요한 게시글이 없습니다.</td>
+                            </tr>
+                        ) : (
+                            myLikeList.map(item => (
+                                <tr key={item.POST_ID}>
+                                    <td>{item.POST_ID}</td>
+                                    <td>{item.TITLE}</td>
+                                    <td>{item.USER_ID}</td>
+                                    <td>{item.LIKE_CNT}</td>
+                                    <td>{item.VIEW_CNT}</td>
                                 </tr>
                             ))
                         )}

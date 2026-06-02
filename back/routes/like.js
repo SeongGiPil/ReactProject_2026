@@ -5,10 +5,8 @@ const { jwtAuthentication } = require("../auth");
 
 const router = express.Router();
 
-
 // 좋아요 상태 + 개수 조회
 router.get("/:postId", jwtAuthentication, async (req, res) => {
-
     const { postId } = req.params;
     const userId = req.user.userId;
 
@@ -20,8 +18,8 @@ router.get("/:postId", jwtAuthentication, async (req, res) => {
         const result = await conn.execute(
             `
             SELECT
-                P.LIKE_CNT,
-                CASE 
+                NVL(P.LIKE_CNT, 0) AS LIKE_CNT,
+                CASE
                     WHEN L.LIKE_ID IS NULL THEN 'N'
                     ELSE 'Y'
                 END AS IS_LIKED
@@ -35,34 +33,34 @@ router.get("/:postId", jwtAuthentication, async (req, res) => {
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
-        if (result.rows.length > 0) {
-            res.json({
-                success: true,
-                info: result.rows[0]
-            });
-        } else {
-            res.json({
+        if (result.rows.length === 0) {
+            return res.status(404).json({
                 success: false,
                 message: "게시글이 없습니다."
             });
         }
 
+        res.json({
+            success: true,
+            info: result.rows[0]
+        });
+
     } catch (err) {
-        console.log(err);
+        console.log("좋아요 조회 에러 :", err);
 
         res.status(500).json({
             success: false,
-            message: "좋아요 조회 실패"
+            message: err.message
         });
 
     } finally {
         if (conn) await conn.close();
     }
-
 });
-// 좋아요 등록
-router.post("/", jwtAuthentication, async (req, res) => {
-    const { postId } = req.body;
+
+// 좋아요 등록/취소
+router.post("/:postId", jwtAuthentication, async (req, res) => {
+    const { postId } = req.params;
     const userId = req.user.userId;
 
     let conn;
@@ -70,7 +68,6 @@ router.post("/", jwtAuthentication, async (req, res) => {
     try {
         conn = await db.getConnection();
 
-        // 이미 좋아요 했는지 확인
         const check = await conn.execute(
             `
             SELECT LIKE_ID
@@ -83,9 +80,33 @@ router.post("/", jwtAuthentication, async (req, res) => {
         );
 
         if (check.rows.length > 0) {
+            await conn.execute(
+                `
+                DELETE FROM POST_LIKE
+                WHERE POST_ID = :postId
+                AND USER_ID = :userId
+                `,
+                { postId, userId }
+            );
+
+            await conn.execute(
+                `
+                UPDATE POST
+                SET LIKE_CNT = CASE
+                    WHEN NVL(LIKE_CNT, 0) > 0 THEN NVL(LIKE_CNT, 0) - 1
+                    ELSE 0
+                END
+                WHERE POST_ID = :postId
+                `,
+                { postId }
+            );
+
+            await conn.commit();
+
             return res.json({
-                success: false,
-                message: "이미 좋아요를 눌렀습니다."
+                success: true,
+                isLiked: "N",
+                message: "좋아요 취소"
             });
         }
 
@@ -108,7 +129,7 @@ router.post("/", jwtAuthentication, async (req, res) => {
         await conn.execute(
             `
             UPDATE POST
-            SET LIKE_CNT = LIKE_CNT + 1
+            SET LIKE_CNT = NVL(LIKE_CNT, 0) + 1
             WHERE POST_ID = :postId
             `,
             { postId }
@@ -118,21 +139,23 @@ router.post("/", jwtAuthentication, async (req, res) => {
 
         res.json({
             success: true,
-            message: "좋아요 완료"
+            isLiked: "Y",
+            message: "좋아요 등록"
         });
 
     } catch (err) {
-        console.log(err);
+        console.log("좋아요 등록/취소 에러 :", err);
 
         if (conn) await conn.rollback();
 
         res.status(500).json({
             success: false,
-            message: "좋아요 실패"
+            message: err.message
         });
 
     } finally {
         if (conn) await conn.close();
     }
 });
+
 module.exports = router;

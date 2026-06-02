@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import {
     Drawer,
@@ -19,7 +19,8 @@ import {
     Person,
     EditNote,
     Article,
-    Logout
+    Logout,
+    Groups
 } from "@mui/icons-material";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -28,6 +29,31 @@ function Menu() {
     const navigate = useNavigate();
 
     const user = JSON.parse(localStorage.getItem("user"));
+
+    // =========================
+    // 팀 게시판 드롭다운 여부
+    // true = 펼침
+    // false = 닫힘
+    // =========================
+    const [openTeamMenu, setOpenTeamMenu] = useState(false);
+
+    // =========================
+    // 팀 목록
+    // =========================
+    const teams = [
+        { id: 1, name: "LG" },
+        { id: 2, name: "두산" },
+        { id: 3, name: "SSG" },
+        { id: 4, name: "KIA" },
+        { id: 5, name: "삼성" },
+        { id: 6, name: "롯데" },
+        { id: 7, name: "한화" },
+        { id: 8, name: "KT" },
+        { id: 9, name: "NC" },
+        { id: 10, name: "키움" }
+    ];
+
+
 
     function fnLogout() {
         localStorage.removeItem("token");
@@ -168,6 +194,35 @@ function Menu() {
                         <ListItemText primary="통합게시판" />
                     </ListItemButton>
                 </ListItem>
+
+                <ListItem disablePadding>
+                    <ListItemButton
+                        onClick={() => setOpenTeamMenu(!openTeamMenu)}
+                        sx={menuStyle}
+                    >
+                        <ListItemIcon sx={iconStyle}>
+                            <Groups />
+                        </ListItemIcon>
+                        <ListItemText primary="팀 게시판" />
+                    </ListItemButton>
+                </ListItem>
+
+                {openTeamMenu && teams.map(team => (
+                    <ListItem key={team.id} disablePadding>
+                        <ListItemButton
+                            component={Link}
+                            to={"/team/" + team.id}
+                            sx={{
+                                ...menuStyle,
+                                pl: 6,
+                                fontSize: "13px"
+                            }}
+                        >
+                            <ListItemText primary={team.name} />
+                        </ListItemButton>
+                    </ListItem>
+                ))}
+
 
                 <ListItem disablePadding>
                     <ListItemButton

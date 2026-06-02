@@ -1,9 +1,23 @@
+// Express 라우터 사용
 const express = require("express");
-const db = require("../db");
+
+// Oracle DB 결과를 객체 형태로 받기 위해 사용
+const oracledb = require("oracledb");
+
+// JWT 토큰 생성용
 const jwt = require("jsonwebtoken");
+
+// 비밀번호 암호화 / 비교용
 const bcrypt = require("bcrypt");
+
+// 이미지 파일 업로드용
 const multer = require("multer");
+
+// 파일 경로 처리용
 const path = require("path");
+
+// DB 연결 모듈
+const db = require("../db");
 
 const router = express.Router();
 
@@ -13,37 +27,30 @@ const router = express.Router();
 // =========================
 
 const profileStorage = multer.diskStorage({
-
-    // 파일 저장 위치
     destination: function (req, file, cb) {
-        cb(
-            null,
-            path.join(__dirname, "../uploads/profile")
-        );
+        cb(null, path.join(__dirname, "../uploads/profile"));
     },
 
-    // 저장될 파일명
     filename: function (req, file, cb) {
         const ext = path.extname(file.originalname);
 
         cb(
             null,
-            Date.now() +
-            "_" +
-            Math.round(Math.random() * 1000000) +
-            ext
+            Date.now() + "_" + Math.round(Math.random() * 1000000) + ext
         );
     }
-
 });
 
-// upload.single("profileImg")에서 profileImg가 프론트 FormData key 이름
 const profileUpload = multer({
     storage: profileStorage
 });
 
 
+// =========================
 // 전체 회원 조회
+// GET /user
+// =========================
+
 router.get("/", async (req, res) => {
     let conn;
 
@@ -51,14 +58,24 @@ router.get("/", async (req, res) => {
         conn = await db.getConnection();
 
         const result = await conn.execute(
-            `SELECT * FROM USERS`
+            `
+            SELECT *
+            FROM USERS
+            `,
+            {},
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
         );
 
         res.json(result.rows);
 
     } catch (err) {
         console.log(err);
-        res.status(500).json({ message: "조회 실패" });
+
+        res.status(500).json({
+            message: "조회 실패"
+        });
 
     } finally {
         if (conn) await conn.close();
@@ -66,7 +83,11 @@ router.get("/", async (req, res) => {
 });
 
 
+// =========================
 // 아이디 중복체크
+// GET /user/check/:userId
+// =========================
+
 router.get("/check/:userId", async (req, res) => {
     const { userId } = req.params;
     let conn;
@@ -80,7 +101,10 @@ router.get("/check/:userId", async (req, res) => {
             FROM USERS
             WHERE USER_ID = :userId
             `,
-            { userId }
+            { userId },
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
         );
 
         res.json({
@@ -101,7 +125,11 @@ router.get("/check/:userId", async (req, res) => {
 });
 
 
+// =========================
 // 회원가입
+// POST /user/join
+// =========================
+
 router.post("/join", async (req, res) => {
     const { userId, pwd, nickname, email } = req.body;
     let conn;
@@ -109,7 +137,6 @@ router.post("/join", async (req, res) => {
     try {
         conn = await db.getConnection();
 
-        // 비밀번호 암호화
         const hashPwd = await bcrypt.hash(pwd, 10);
 
         await conn.execute(
@@ -157,7 +184,11 @@ router.post("/join", async (req, res) => {
 });
 
 
+// =========================
 // 로그인 + JWT 발급
+// POST /user/login
+// =========================
+
 router.post("/login", async (req, res) => {
     const { userId, pwd } = req.body;
     let conn;
@@ -177,7 +208,10 @@ router.post("/login", async (req, res) => {
             FROM USERS
             WHERE USER_ID = :userId
             `,
-            { userId }
+            { userId },
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
         );
 
         if (result.rows.length === 0) {
@@ -189,11 +223,7 @@ router.post("/login", async (req, res) => {
 
         const user = result.rows[0];
 
-        // 암호화된 비밀번호 비교
-        const isMatch = await bcrypt.compare(
-            pwd,
-            user.USER_PWD
-        );
+        const isMatch = await bcrypt.compare(pwd, user.USER_PWD);
 
         if (!isMatch) {
             return res.json({
@@ -209,7 +239,6 @@ router.post("/login", async (req, res) => {
             });
         }
 
-        // JWT 토큰 생성
         const token = jwt.sign(
             {
                 userId: user.USER_ID,
@@ -244,8 +273,12 @@ router.post("/login", async (req, res) => {
 });
 
 
-// 회원정보 조회
-router.get("/:userId", async (req, res) => {
+// =========================
+// 마이페이지 통계 조회
+// GET /user/stats/:userId
+// =========================
+
+router.get("/stats/:userId", async (req, res) => {
     const { userId } = req.params;
     let conn;
 
@@ -255,37 +288,39 @@ router.get("/:userId", async (req, res) => {
         const result = await conn.execute(
             `
             SELECT
-                USER_ID,
-                NICKNAME,
-                EMAIL,
-                PROFILE_IMG,
-                USER_STATUS,
-                CDATE
-            FROM USERS
-            WHERE USER_ID = :userId
+                (SELECT COUNT(*)
+                 FROM POST
+                 WHERE USER_ID = :userId
+                 AND POST_STATUS = 'NORMAL') AS POST_CNT,
+
+                (SELECT COUNT(*)
+                 FROM POST_COMMENT
+                 WHERE USER_ID = :userId
+                 AND COMMENT_STATUS = 'NORMAL') AS COMMENT_CNT,
+
+                (SELECT NVL(SUM(LIKE_CNT), 0)
+                 FROM POST
+                 WHERE USER_ID = :userId
+                 AND POST_STATUS = 'NORMAL') AS TOTAL_LIKE_CNT
+            FROM DUAL
             `,
-            { userId }
+            { userId },
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
         );
 
-        if (result.rows.length > 0) {
-            res.json({
-                success: true,
-                info: result.rows[0]
-            });
-
-        } else {
-            res.json({
-                success: false,
-                message: "회원이 없습니다."
-            });
-        }
+        res.json({
+            success: true,
+            info: result.rows[0]
+        });
 
     } catch (err) {
-        console.log(err);
+        console.log("마이페이지 통계 조회 에러 :", err);
 
         res.status(500).json({
             success: false,
-            message: "조회 실패"
+            message: err.message
         });
 
     } finally {
@@ -294,7 +329,119 @@ router.get("/:userId", async (req, res) => {
 });
 
 
+// =========================
+// 내가 작성한 댓글 목록
+// GET /user/my-comments/:userId
+// 반드시 /:userId 보다 위에 있어야 함
+// =========================
+
+router.get("/my-comments/:userId", async (req, res) => {
+    const { userId } = req.params;
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        const result = await conn.execute(
+            `
+            SELECT
+                C.COMMENT_ID,
+                C.POST_ID,
+                DBMS_LOB.SUBSTR(C.CONTENT, 4000, 1) AS CONTENT,
+                C.CDATETIME,
+                P.TITLE
+            FROM POST_COMMENT C
+            JOIN POST P
+                ON C.POST_ID = P.POST_ID
+            WHERE C.USER_ID = :userId
+            AND C.COMMENT_STATUS = 'NORMAL'
+            AND P.POST_STATUS = 'NORMAL'
+            ORDER BY C.COMMENT_ID DESC
+            `,
+            { userId },
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
+        );
+
+        res.json({
+            success: true,
+            list: result.rows
+        });
+
+    } catch (err) {
+        console.log("내 댓글 조회 에러 :", err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    } finally {
+        if (conn) await conn.close();
+    }
+});
+
+
+// =========================
+// 내가 좋아요한 게시글
+// GET /user/my-likes/:userId
+// 반드시 /:userId 보다 위에 있어야 함
+// =========================
+
+router.get("/my-likes/:userId", async (req, res) => {
+    const { userId } = req.params;
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        const result = await conn.execute(
+            `
+            SELECT
+                P.POST_ID,
+                P.TITLE,
+                P.USER_ID,
+                NVL(P.LIKE_CNT, 0) AS LIKE_CNT,
+                NVL(P.VIEW_CNT, 0) AS VIEW_CNT,
+                P.CDATETIME
+            FROM POST_LIKE L
+            JOIN POST P
+                ON L.POST_ID = P.POST_ID
+            WHERE L.USER_ID = :userId
+            AND P.POST_STATUS = 'NORMAL'
+            ORDER BY L.LIKE_ID DESC
+            `,
+            { userId },
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
+        );
+
+        res.json({
+            success: true,
+            list: result.rows
+        });
+
+    } catch (err) {
+        console.log("좋아요 게시글 조회 에러 :", err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    } finally {
+        if (conn) await conn.close();
+    }
+});
+
+
+// =========================
 // 회원정보 수정
+// PUT /user/update
+// =========================
+
 router.put("/update", async (req, res) => {
     const { userId, nickname, email } = req.body;
     let conn;
@@ -341,19 +488,17 @@ router.put("/update", async (req, res) => {
 
 // =========================
 // 프로필 이미지 수정
+// POST /user/profile-img
 // =========================
 
 router.post(
     "/profile-img",
     profileUpload.single("profileImg"),
     async (req, res) => {
-
         const { userId } = req.body;
-
         let conn;
 
         try {
-            // 파일이 안 넘어온 경우
             if (!req.file) {
                 return res.status(400).json({
                     success: false,
@@ -363,9 +508,7 @@ router.post(
 
             conn = await db.getConnection();
 
-            // 브라우저에서 접근 가능한 이미지 경로
-            const profileImgPath =
-                "/uploads/profile/" + req.file.filename;
+            const profileImgPath = "/uploads/profile/" + req.file.filename;
 
             await conn.execute(
                 `
@@ -399,13 +542,18 @@ router.post(
         } finally {
             if (conn) await conn.close();
         }
-
     }
 );
-// 마이페이지 통계 조회
-router.get("/stats/:userId", async (req, res) => {
-    const { userId } = req.params;
 
+
+// =========================
+// 회원정보 조회
+// GET /user/:userId
+// 반드시 맨 아래쪽에 있어야 함
+// =========================
+
+router.get("/:userId", async (req, res) => {
+    const { userId } = req.params;
     let conn;
 
     try {
@@ -414,21 +562,14 @@ router.get("/stats/:userId", async (req, res) => {
         const result = await conn.execute(
             `
             SELECT
-                (SELECT COUNT(*)
-                 FROM POST
-                 WHERE USER_ID = :userId
-                 AND POST_STATUS = 'NORMAL') AS POST_CNT,
-
-                (SELECT COUNT(*)
-                 FROM POST_COMMENT
-                 WHERE USER_ID = :userId
-                 AND COMMENT_STATUS = 'NORMAL') AS COMMENT_CNT,
-
-                (SELECT NVL(SUM(LIKE_CNT), 0)
-                 FROM POST
-                 WHERE USER_ID = :userId
-                 AND POST_STATUS = 'NORMAL') AS TOTAL_LIKE_CNT
-            FROM DUAL
+                USER_ID,
+                NICKNAME,
+                EMAIL,
+                PROFILE_IMG,
+                USER_STATUS,
+                CDATE
+            FROM USERS
+            WHERE USER_ID = :userId
             `,
             { userId },
             {
@@ -436,17 +577,25 @@ router.get("/stats/:userId", async (req, res) => {
             }
         );
 
-        res.json({
-            success: true,
-            info: result.rows[0]
-        });
+        if (result.rows.length > 0) {
+            res.json({
+                success: true,
+                info: result.rows[0]
+            });
+
+        } else {
+            res.json({
+                success: false,
+                message: "회원이 없습니다."
+            });
+        }
 
     } catch (err) {
-        console.log("마이페이지 통계 조회 에러 :", err);
+        console.log(err);
 
         res.status(500).json({
             success: false,
-            message: "통계 조회 실패"
+            message: err.message
         });
 
     } finally {

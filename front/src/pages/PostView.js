@@ -3,26 +3,42 @@ import { useParams, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 function PostView() {
+    // URL의 postId 값 가져오기
     const { postId } = useParams();
+
+    // 페이지 이동 함수
     const navigate = useNavigate();
 
+    // 게시글 정보
     const [post, setPost] = useState({});
+
+    // 게시글 이미지 목록
     const [images, setImages] = useState([]);
 
+    // 수정 모드 여부
     const [isEdit, setIsEdit] = useState(false);
 
+    // 수정용 제목 / 내용
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
 
+    // 댓글 목록 / 입력 댓글
     const [commentList, setCommentList] = useState([]);
     const [comment, setComment] = useState("");
 
+    // 좋아요 수 / 좋아요 여부
     const [likeCnt, setLikeCnt] = useState(0);
     const [isLiked, setIsLiked] = useState(false);
 
+    // 로그인 토큰
     const token = localStorage.getItem("token");
+
+    // 현재 로그인 사용자
     const currentUser = token ? jwtDecode(token) : null;
 
+    // =========================
+    // 게시글 상세 조회
+    // =========================
     function fnGetPost() {
         fetch("http://localhost:3010/post/view/" + postId)
             .then(res => res.json())
@@ -31,8 +47,6 @@ function PostView() {
                     setPost(data.info);
                     setTitle(data.info.TITLE);
                     setContent(data.info.CONTENT);
-
-                    // 상세보기 이미지 목록
                     setImages(data.images || []);
                 } else {
                     alert(data.message);
@@ -44,20 +58,33 @@ function PostView() {
             });
     }
 
+    // =========================
+    // 게시글 수정
+    // JWT 토큰 필요
+    // =========================
     function fnUpdate() {
-        if (!title || !content) {
+        if (!title.trim() || !content.trim()) {
             alert("제목과 내용을 입력하세요.");
+            return;
+        }
+
+        if (!token) {
+            alert("로그인 후 이용 가능합니다.");
+            navigate("/");
             return;
         }
 
         fetch("http://localhost:3010/post/update/" + postId, {
             method: "PUT",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token
             },
             body: JSON.stringify({
                 title,
-                content
+                content,
+                postType: post.POST_TYPE,
+                teamId: post.TEAM_ID
             })
         })
             .then(res => res.json())
@@ -80,13 +107,26 @@ function PostView() {
             });
     }
 
+    // =========================
+    // 게시글 삭제
+    // JWT 토큰 필요
+    // =========================
     function fnDelete() {
         if (!window.confirm("정말 삭제하시겠습니까?")) {
             return;
         }
 
+        if (!token) {
+            alert("로그인 후 이용 가능합니다.");
+            navigate("/");
+            return;
+        }
+
         fetch("http://localhost:3010/post/delete/" + postId, {
-            method: "DELETE"
+            method: "DELETE",
+            headers: {
+                Authorization: "Bearer " + token
+            }
         })
             .then(res => res.json())
             .then(data => {
@@ -102,6 +142,9 @@ function PostView() {
             });
     }
 
+    // =========================
+    // 댓글 목록 조회
+    // =========================
     function fnGetCommentList() {
         fetch("http://localhost:3010/comment/" + postId)
             .then(res => res.json())
@@ -114,10 +157,18 @@ function PostView() {
             });
     }
 
+    // =========================
+    // 좋아요 상태 조회
+    // =========================
     function fnGetLike() {
+        if (!token) {
+            return;
+        }
+
         fetch("http://localhost:3010/like/" + postId, {
+            method: "GET",
             headers: {
-                Authorization: "Bearer " + localStorage.getItem("token")
+                Authorization: "Bearer " + token
             }
         })
             .then(res => res.json())
@@ -132,48 +183,48 @@ function PostView() {
             });
     }
 
-    function fnLike() {
-        fetch("http://localhost:3010/like", {
+    // =========================
+    // 좋아요 등록 / 취소
+    // =========================
+    function fnToggleLike() {
+        if (!token) {
+            alert("로그인 후 이용 가능합니다.");
+            navigate("/");
+            return;
+        }
+
+        fetch("http://localhost:3010/like/" + postId, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                Authorization: "Bearer " + localStorage.getItem("token")
-            },
-            body: JSON.stringify({
-                postId
-            })
-        })
-            .then(res => res.json())
-            .then(data => {
-                alert(data.message);
-                fnGetLike();
-            })
-            .catch(err => {
-                console.log(err);
-                alert("좋아요 실패");
-            });
-    }
-
-    function fnUnlike() {
-        fetch("http://localhost:3010/like/" + postId, {
-            method: "DELETE",
-            headers: {
-                Authorization: "Bearer " + localStorage.getItem("token")
+                Authorization: "Bearer " + token
             }
         })
             .then(res => res.json())
             .then(data => {
                 alert(data.message);
-                fnGetLike();
+
+                if (data.success) {
+                    fnGetLike();
+                    fnGetPost();
+                }
             })
             .catch(err => {
                 console.log(err);
-                alert("좋아요 취소 실패");
+                alert("좋아요 처리 실패");
             });
     }
 
+    // =========================
+    // 댓글 등록
+    // =========================
     function fnAddComment() {
-        if (!comment) {
+        if (!token) {
+            alert("로그인 후 이용 가능합니다.");
+            navigate("/");
+            return;
+        }
+
+        if (!comment.trim()) {
             alert("댓글을 입력하세요.");
             return;
         }
@@ -182,7 +233,7 @@ function PostView() {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: "Bearer " + localStorage.getItem("token")
+                Authorization: "Bearer " + token
             },
             body: JSON.stringify({
                 postId,
@@ -193,7 +244,7 @@ function PostView() {
             .then(data => {
                 alert(data.message);
 
-                if (data.result) {
+                if (data.result || data.success) {
                     setComment("");
                     fnGetCommentList();
                 }
@@ -204,6 +255,9 @@ function PostView() {
             });
     }
 
+    // =========================
+    // 댓글 삭제
+    // =========================
     function fnDeleteComment(commentId) {
         if (!window.confirm("댓글을 삭제하시겠습니까?")) {
             return;
@@ -212,7 +266,7 @@ function PostView() {
         fetch("http://localhost:3010/comment/" + commentId, {
             method: "DELETE",
             headers: {
-                Authorization: "Bearer " + localStorage.getItem("token")
+                Authorization: "Bearer " + token
             }
         })
             .then(res => res.json())
@@ -226,15 +280,17 @@ function PostView() {
             });
     }
 
+    // 날짜 포맷
     function fnDateFormat(date) {
         return new Date(date).toLocaleString("ko-KR");
     }
 
+    // 화면 처음 열릴 때 실행
     useEffect(() => {
         fnGetPost();
         fnGetCommentList();
         fnGetLike();
-    }, []);
+    }, [postId]);
 
     return (
         <div className="post-view-container">
@@ -252,26 +308,17 @@ function PostView() {
                 <span>작성자 : {post.USER_ID}</span>
                 <span>조회수 : {post.VIEW_CNT}</span>
             </div>
+
             <div className="post-stats">
-
                 <span>❤️ {likeCnt}</span>
-
-                <span>
-                    💬 {commentList.length}
-                </span>
-
-                <span>
-                    👀 {post.VIEW_CNT}
-                </span>
-
+                <span>💬 {commentList.length}</span>
+                <span>👀 {post.VIEW_CNT}</span>
             </div>
-
 
             <div className="post-info">
                 작성일 : {post.CDATETIME && fnDateFormat(post.CDATETIME)}
             </div>
 
-            {/* 상세보기 이미지 */}
             {images.length > 0 && (
                 <div className="post-image-area">
                     {images.map(img => (
@@ -300,7 +347,7 @@ function PostView() {
             <div className="post-action-area">
                 <button
                     className={isLiked ? "like-btn" : "like-btn unlike"}
-                    onClick={isLiked ? fnUnlike : fnLike}
+                    onClick={fnToggleLike}
                 >
                     {isLiked ? "❤️" : "🤍"} 좋아요 {likeCnt}
                 </button>

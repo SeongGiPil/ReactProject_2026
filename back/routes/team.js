@@ -5,7 +5,12 @@ const db = require("../db");
 const router = express.Router();
 
 
+// =========================
 // 팀 목록 조회
+// GET /team/list
+// 마이페이지에서 체크박스로 보여줄 팀 목록
+// =========================
+
 router.get("/list", async (req, res) => {
     let conn;
 
@@ -36,7 +41,7 @@ router.get("/list", async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: "팀 목록 조회 실패"
+            message: err.message
         });
 
     } finally {
@@ -45,10 +50,13 @@ router.get("/list", async (req, res) => {
 });
 
 
+// =========================
 // 내가 선택한 응원팀 목록 조회
+// GET /team/my/:userId
+// =========================
+
 router.get("/my/:userId", async (req, res) => {
     const { userId } = req.params;
-
     let conn;
 
     try {
@@ -83,7 +91,7 @@ router.get("/my/:userId", async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: "내 응원팀 조회 실패"
+            message: err.message
         });
 
     } finally {
@@ -92,10 +100,14 @@ router.get("/my/:userId", async (req, res) => {
 });
 
 
+// =========================
 // 내가 해당 팀 응원팀인지 확인
+// GET /team/check/:userId/:teamId
+// 팀 게시판 접근 가능 여부 확인용
+// =========================
+
 router.get("/check/:userId/:teamId", async (req, res) => {
     const { userId, teamId } = req.params;
-
     let conn;
 
     try {
@@ -119,12 +131,6 @@ router.get("/check/:userId/:teamId", async (req, res) => {
             }
         );
 
-        console.log("팀 권한 체크:", {
-            userId,
-            teamId: Number(teamId),
-            count: result.rows.length
-        });
-
         res.json({
             success: true,
             allowed: result.rows.length > 0
@@ -135,7 +141,7 @@ router.get("/check/:userId/:teamId", async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: "팀 권한 확인 실패"
+            message: err.message
         });
 
     } finally {
@@ -144,15 +150,31 @@ router.get("/check/:userId/:teamId", async (req, res) => {
 });
 
 
+// =========================
 // 응원팀 변경
+// POST /team/update-user-team
+// 기존 응원팀 전체 삭제 후 새로 선택한 팀 다시 등록
+// =========================
+
 router.post("/update-user-team", async (req, res) => {
     const { userId, teamList } = req.body;
+
+    // teamList가 배열이 아닐 경우 빈 배열로 처리
+    const newTeamList = Array.isArray(teamList) ? teamList : [];
 
     let conn;
 
     try {
         conn = await db.getConnection();
 
+        if (!userId) {
+            return res.json({
+                success: false,
+                message: "사용자 정보가 없습니다."
+            });
+        }
+
+        // 기존 응원팀 삭제
         await conn.execute(
             `
             DELETE FROM USER_TEAM
@@ -161,27 +183,29 @@ router.post("/update-user-team", async (req, res) => {
             { userId }
         );
 
-        if (teamList && teamList.length > 0) {
-            for (let i = 0; i < teamList.length; i++) {
-                await conn.execute(
-                    `
-                    INSERT INTO USER_TEAM (
-                        USER_ID,
-                        TEAM_ID,
-                        CDATETIME
-                    )
-                    VALUES (
-                        :userId,
-                        :teamId,
-                        SYSDATE
-                    )
-                    `,
-                    {
-                        userId,
-                        teamId: Number(teamList[i])
-                    }
-                );
-            }
+        // 중복 teamId 제거
+        const uniqueTeamList = [...new Set(newTeamList)];
+
+        // 새 응원팀 등록
+        for (let i = 0; i < uniqueTeamList.length; i++) {
+            await conn.execute(
+                `
+                INSERT INTO USER_TEAM (
+                    USER_ID,
+                    TEAM_ID,
+                    CDATETIME
+                )
+                VALUES (
+                    :userId,
+                    :teamId,
+                    SYSDATE
+                )
+                `,
+                {
+                    userId,
+                    teamId: Number(uniqueTeamList[i])
+                }
+            );
         }
 
         await conn.commit();
@@ -198,7 +222,7 @@ router.post("/update-user-team", async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: "응원팀 변경 실패"
+            message: err.message
         });
 
     } finally {

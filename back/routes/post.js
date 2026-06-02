@@ -4,6 +4,9 @@ const multer = require("multer");
 const path = require("path");
 const db = require("../db");
 
+// JWT 인증 미들웨어
+const { jwtAuthentication } = require("../auth");
+
 const router = express.Router();
 
 
@@ -11,11 +14,15 @@ const router = express.Router();
 // multer 이미지 업로드 설정
 // =========================
 
+// 이미지 저장 설정
 const storage = multer.diskStorage({
+
+    // 이미지 저장 폴더
     destination: function (req, file, cb) {
         cb(null, "uploads/");
     },
 
+    // 저장될 파일명
     filename: function (req, file, cb) {
         const ext = path.extname(file.originalname);
 
@@ -26,13 +33,13 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({
-    storage: storage
-});
+// images라는 이름으로 최대 5장 업로드 가능
+const upload = multer({ storage });
 
 
 // =========================
 // 게시글 등록 + 이미지 업로드
+// POST /post/add
 // =========================
 
 router.post("/add", upload.array("images", 5), async (req, res) => {
@@ -83,13 +90,11 @@ router.post("/add", upload.array("images", 5), async (req, res) => {
                 title,
                 content,
                 postType: postType || "FREE",
-
-                // 통합게시판이면 null, 팀게시판이면 숫자
                 teamId: teamId ? Number(teamId) : null
             }
         );
 
-        // 이미지가 있으면 POST_IMAGE에 저장
+        // 이미지 저장
         if (req.files && req.files.length > 0) {
             for (let i = 0; i < req.files.length; i++) {
                 const file = req.files[i];
@@ -146,7 +151,7 @@ router.post("/add", upload.array("images", 5), async (req, res) => {
 
 // =========================
 // 통합 게시글 목록 조회
-// TEAM_ID가 NULL인 글만 조회
+// GET /post/list
 // =========================
 
 router.get("/list", async (req, res) => {
@@ -164,8 +169,8 @@ router.get("/list", async (req, res) => {
                 DBMS_LOB.SUBSTR(P.CONTENT, 4000, 1) AS CONTENT,
                 P.POST_TYPE,
                 P.TEAM_ID,
-                P.VIEW_CNT,
-                P.LIKE_CNT,
+                NVL(P.VIEW_CNT, 0) AS VIEW_CNT,
+                NVL(P.LIKE_CNT, 0) AS LIKE_CNT,
                 P.POST_STATUS,
                 P.CDATETIME,
                 I.IMG_PATH AS MAIN_IMG
@@ -174,7 +179,6 @@ router.get("/list", async (req, res) => {
                 ON P.POST_ID = I.POST_ID
                 AND I.IS_MAIN = 'Y'
             WHERE P.POST_STATUS = 'NORMAL'
-            AND P.TEAM_ID IS NULL
             ORDER BY P.POST_ID DESC
             `,
             {},
@@ -204,12 +208,11 @@ router.get("/list", async (req, res) => {
 
 // =========================
 // 팀 게시글 목록 조회
-// /post/team/:teamId
+// GET /post/team/:teamId
 // =========================
 
 router.get("/team/:teamId", async (req, res) => {
     const { teamId } = req.params;
-      console.log("조회할 TEAM_ID =", teamId);
 
     let conn;
 
@@ -225,8 +228,8 @@ router.get("/team/:teamId", async (req, res) => {
                 DBMS_LOB.SUBSTR(P.CONTENT, 4000, 1) AS CONTENT,
                 P.POST_TYPE,
                 P.TEAM_ID,
-                P.VIEW_CNT,
-                P.LIKE_CNT,
+                NVL(P.VIEW_CNT, 0) AS VIEW_CNT,
+                NVL(P.LIKE_CNT, 0) AS LIKE_CNT,
                 P.POST_STATUS,
                 P.CDATETIME,
                 I.IMG_PATH AS MAIN_IMG
@@ -256,7 +259,7 @@ router.get("/team/:teamId", async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: "팀 게시글 조회 실패"
+            message: err.message
         });
 
     } finally {
@@ -267,6 +270,7 @@ router.get("/team/:teamId", async (req, res) => {
 
 // =========================
 // 게시글 상세 조회
+// GET /post/view/:postId
 // =========================
 
 router.get("/view/:postId", async (req, res) => {
@@ -281,7 +285,7 @@ router.get("/view/:postId", async (req, res) => {
         await conn.execute(
             `
             UPDATE POST
-            SET VIEW_CNT = VIEW_CNT + 1
+            SET VIEW_CNT = NVL(VIEW_CNT, 0) + 1
             WHERE POST_ID = :postId
             AND POST_STATUS = 'NORMAL'
             `,
@@ -298,8 +302,8 @@ router.get("/view/:postId", async (req, res) => {
                 DBMS_LOB.SUBSTR(CONTENT, 4000, 1) AS CONTENT,
                 POST_TYPE,
                 TEAM_ID,
-                VIEW_CNT,
-                LIKE_CNT,
+                NVL(VIEW_CNT, 0) AS VIEW_CNT,
+                NVL(LIKE_CNT, 0) AS LIKE_CNT,
                 POST_STATUS,
                 CDATETIME
             FROM POST
@@ -363,11 +367,17 @@ router.get("/view/:postId", async (req, res) => {
 
 // =========================
 // 게시글 수정
+// PUT /post/update/:postId
+// JWT 필요
+// 작성자 본인만 수정 가능
 // =========================
 
-router.put("/update/:postId", async (req, res) => {
+router.put("/update/:postId", jwtAuthentication, async (req, res) => {
     const { postId } = req.params;
     const { title, content, postType, teamId } = req.body;
+
+    // JWT에서 로그인 사용자 아이디 가져옴
+    const userId = req.user.userId;
 
     let conn;
 
@@ -383,6 +393,7 @@ router.put("/update/:postId", async (req, res) => {
                 POST_TYPE = :postType,
                 TEAM_ID = :teamId
             WHERE POST_ID = :postId
+            AND USER_ID = :userId
             AND POST_STATUS = 'NORMAL'
             `,
             {
@@ -390,22 +401,24 @@ router.put("/update/:postId", async (req, res) => {
                 content,
                 postType: postType || "FREE",
                 teamId: teamId ? Number(teamId) : null,
-                postId
-            },
-            {
-                autoCommit: true
+                postId,
+                userId
             }
         );
+
+        await conn.commit();
 
         res.json({
             success: result.rowsAffected > 0,
             message: result.rowsAffected > 0
                 ? "게시글 수정 성공"
-                : "게시글이 없습니다."
+                : "수정 권한이 없거나 게시글이 없습니다."
         });
 
     } catch (err) {
         console.log("게시글 수정 에러 :", err);
+
+        if (conn) await conn.rollback();
 
         res.status(500).json({
             success: false,
@@ -420,46 +433,35 @@ router.put("/update/:postId", async (req, res) => {
 
 // =========================
 // 게시글 삭제
+// DELETE /post/delete/:postId
+// JWT 필요
+// 작성자 본인만 삭제 가능
+// 실제 DELETE가 아니라 POST_STATUS='DEL' 처리
 // =========================
 
-router.delete("/delete/:postId", async (req, res) => {
+router.delete("/delete/:postId", jwtAuthentication, async (req, res) => {
     const { postId } = req.params;
+
+    // JWT에서 로그인 사용자 아이디 가져옴
+    const userId = req.user.userId;
 
     let conn;
 
     try {
         conn = await db.getConnection();
 
-        await conn.execute(
-            `
-            DELETE FROM POST_COMMENT
-            WHERE POST_ID = :postId
-            `,
-            { postId }
-        );
-
-        await conn.execute(
-            `
-            DELETE FROM POST_LIKE
-            WHERE POST_ID = :postId
-            `,
-            { postId }
-        );
-
-        await conn.execute(
-            `
-            DELETE FROM POST_IMAGE
-            WHERE POST_ID = :postId
-            `,
-            { postId }
-        );
-
         const result = await conn.execute(
             `
-            DELETE FROM POST
+            UPDATE POST
+            SET POST_STATUS = 'DEL'
             WHERE POST_ID = :postId
+            AND USER_ID = :userId
+            AND POST_STATUS = 'NORMAL'
             `,
-            { postId }
+            {
+                postId,
+                userId
+            }
         );
 
         await conn.commit();
@@ -468,7 +470,7 @@ router.delete("/delete/:postId", async (req, res) => {
             success: result.rowsAffected > 0,
             message: result.rowsAffected > 0
                 ? "삭제 성공"
-                : "게시글이 없습니다."
+                : "삭제 권한이 없거나 게시글이 없습니다."
         });
 
     } catch (err) {
@@ -489,6 +491,7 @@ router.delete("/delete/:postId", async (req, res) => {
 
 // =========================
 // 내 게시글 목록 조회
+// GET /post/my/:userId
 // =========================
 
 router.get("/my/:userId", async (req, res) => {
@@ -506,8 +509,8 @@ router.get("/my/:userId", async (req, res) => {
                 TITLE,
                 POST_TYPE,
                 TEAM_ID,
-                VIEW_CNT,
-                LIKE_CNT,
+                NVL(VIEW_CNT, 0) AS VIEW_CNT,
+                NVL(LIKE_CNT, 0) AS LIKE_CNT,
                 CDATETIME
             FROM POST
             WHERE USER_ID = :userId

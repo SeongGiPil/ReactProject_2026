@@ -6,8 +6,6 @@ function TeamBoard() {
 
     const [allowed, setAllowed] = useState(false);
     const [checked, setChecked] = useState(false);
-
-    // 팀 게시글 목록
     const [postList, setPostList] = useState([]);
 
     const teams = {
@@ -33,7 +31,12 @@ function TeamBoard() {
         return "기타";
     }
 
-    // 팀 게시판 입장 권한 확인
+    function fnDateFormat(date) {
+        if (!date) return "";
+        return new Date(date).toLocaleString("ko-KR");
+    }
+
+    // 팀 게시판 권한 확인
     function fnCheckTeamAuth() {
         const user = JSON.parse(localStorage.getItem("user"));
 
@@ -70,12 +73,10 @@ function TeamBoard() {
         fetch("http://localhost:3010/post/team/" + teamId)
             .then(res => res.json())
             .then(data => {
-
-
                 console.log("팀 게시글 API 결과:", data);
 
                 if (data.success) {
-                    setPostList(data.list);
+                    setPostList(data.list || []);
                 }
             })
             .catch(err => {
@@ -141,6 +142,10 @@ function TeamBoard() {
                 </Link>
             </div>
 
+            <div className="search-result-count">
+                총 {postList.length}개
+            </div>
+
             {postList.length === 0 ? (
                 <div className="empty-box">
                     아직 이 팀 게시글이 없습니다.
@@ -154,10 +159,24 @@ function TeamBoard() {
                             </span>
 
                             <span className="post-date">
-                                {item.CDATETIME &&
-                                    new Date(item.CDATETIME).toLocaleString("ko-KR")}
+                                {fnDateFormat(item.CDATETIME)}
                             </span>
                         </div>
+
+                        {item.MAIN_IMG && (
+                            <div style={{ marginBottom: "10px" }}>
+                                <img
+                                    src={"http://localhost:3010" + item.MAIN_IMG}
+                                    alt="대표이미지"
+                                    style={{
+                                        width: "100%",
+                                        maxHeight: "250px",
+                                        objectFit: "cover",
+                                        borderRadius: "10px"
+                                    }}
+                                />
+                            </div>
+                        )}
 
                         <Link
                             to={"/post/" + item.POST_ID}
