@@ -24,22 +24,26 @@ import {
 } from "@mui/icons-material";
 
 import { Link, useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 function Menu() {
     const navigate = useNavigate();
 
     const user = JSON.parse(localStorage.getItem("user"));
+    const token = localStorage.getItem("token");
 
-    // =========================
-    // 팀 게시판 드롭다운 여부
-    // true = 펼침
-    // false = 닫힘
-    // =========================
+    let loginUser = null;
+
+    if (token) {
+        try {
+            loginUser = jwtDecode(token);
+        } catch (err) {
+            console.log("토큰 디코드 실패", err);
+        }
+    }
+
     const [openTeamMenu, setOpenTeamMenu] = useState(false);
 
-    // =========================
-    // 팀 목록
-    // =========================
     const teams = [
         { id: 1, name: "LG" },
         { id: 2, name: "두산" },
@@ -52,8 +56,6 @@ function Menu() {
         { id: 9, name: "NC" },
         { id: 10, name: "키움" }
     ];
-
-
 
     function fnLogout() {
         localStorage.removeItem("token");
@@ -69,7 +71,6 @@ function Menu() {
             sx={{
                 width: 200,
                 flexShrink: 0,
-
                 "& .MuiDrawer-paper": {
                     width: 200,
                     boxSizing: "border-box",
@@ -140,7 +141,10 @@ function Menu() {
                             fontWeight: "bold"
                         }}
                     >
-                        {user?.NICKNAME || user?.nickname || "게스트"}
+                        {user?.NICKNAME ||
+                            user?.nickname ||
+                            user?.ADMIN_NAME ||
+                            "게스트"}
                     </Typography>
 
                     <Typography
@@ -150,7 +154,9 @@ function Menu() {
                             mt: 0.3
                         }}
                     >
-                        환영합니다.
+                        {loginUser?.role === "ADMIN"
+                            ? "관리자 계정"
+                            : "환영합니다."}
                     </Typography>
                 </Box>
             </Box>
@@ -169,73 +175,119 @@ function Menu() {
                     </ListItemButton>
                 </ListItem>
 
-                <ListItem disablePadding>
-                    <ListItemButton
-                        component={Link}
-                        to="/write"
-                        sx={menuStyle}
-                    >
-                        <ListItemIcon sx={iconStyle}>
-                            <EditNote />
-                        </ListItemIcon>
-                        <ListItemText primary="글쓰기" />
-                    </ListItemButton>
-                </ListItem>
+                {loginUser?.role !== "ADMIN" && (
+                    <>
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                component={Link}
+                                to="/write"
+                                sx={menuStyle}
+                            >
+                                <ListItemIcon sx={iconStyle}>
+                                    <EditNote />
+                                </ListItemIcon>
+                                <ListItemText primary="글쓰기" />
+                            </ListItemButton>
+                        </ListItem>
 
-                <ListItem disablePadding>
-                    <ListItemButton
-                        component={Link}
-                        to="/feed"
-                        sx={menuStyle}
-                    >
-                        <ListItemIcon sx={iconStyle}>
-                            <Article />
-                        </ListItemIcon>
-                        <ListItemText primary="통합게시판" />
-                    </ListItemButton>
-                </ListItem>
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                component={Link}
+                                to="/feed"
+                                sx={menuStyle}
+                            >
+                                <ListItemIcon sx={iconStyle}>
+                                    <Article />
+                                </ListItemIcon>
+                                <ListItemText primary="통합게시판" />
+                            </ListItemButton>
+                        </ListItem>
 
-                <ListItem disablePadding>
-                    <ListItemButton
-                        onClick={() => setOpenTeamMenu(!openTeamMenu)}
-                        sx={menuStyle}
-                    >
-                        <ListItemIcon sx={iconStyle}>
-                            <Groups />
-                        </ListItemIcon>
-                        <ListItemText primary="팀 게시판" />
-                    </ListItemButton>
-                </ListItem>
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                onClick={() => setOpenTeamMenu(!openTeamMenu)}
+                                sx={menuStyle}
+                            >
+                                <ListItemIcon sx={iconStyle}>
+                                    <Groups />
+                                </ListItemIcon>
+                                <ListItemText primary="팀 게시판" />
+                            </ListItemButton>
+                        </ListItem>
 
-                {openTeamMenu && teams.map(team => (
-                    <ListItem key={team.id} disablePadding>
-                        <ListItemButton
-                            component={Link}
-                            to={"/team/" + team.id}
-                            sx={{
-                                ...menuStyle,
-                                pl: 6,
-                                fontSize: "13px"
-                            }}
-                        >
-                            <ListItemText primary={team.name} />
-                        </ListItemButton>
-                    </ListItem>
-                ))}
+                        {openTeamMenu && teams.map(team => (
+                            <ListItem key={team.id} disablePadding>
+                                <ListItemButton
+                                    component={Link}
+                                    to={"/team/" + team.id}
+                                    sx={{
+                                        ...menuStyle,
+                                        pl: 6,
+                                        fontSize: "13px"
+                                    }}
+                                >
+                                    <ListItemText primary={team.name} />
+                                </ListItemButton>
+                            </ListItem>
+                        ))}
 
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                component={Link}
+                                to="/mypage"
+                                sx={menuStyle}
+                            >
+                                <ListItemIcon sx={iconStyle}>
+                                    <Person />
+                                </ListItemIcon>
+                                <ListItemText primary="마이페이지" />
+                            </ListItemButton>
+                        </ListItem>
+                    </>
+                )}
 
-                <ListItem disablePadding>
-                    <ListItemButton
-                        component={Link}
-                        to="/mypage"
-                        sx={menuStyle}
-                    >
-                        <ListItemIcon sx={iconStyle}>
-                            <Person />
-                        </ListItemIcon>
-                        <ListItemText primary="마이페이지" />
-                    </ListItemButton>
-                </ListItem>
+                {loginUser?.role === "ADMIN" && (
+                    <>
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                component={Link}
+                                to="/admin/report"
+                                sx={menuStyle}
+                            >
+                                <ListItemIcon sx={iconStyle}>
+                                    🚨
+                                </ListItemIcon>
+                                <ListItemText primary="신고관리" />
+                            </ListItemButton>
+                        </ListItem>
+
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                component={Link}
+                                to="/admin/post"
+                                sx={menuStyle}
+                            >
+                                <ListItemIcon sx={iconStyle}>
+                                    📝
+                                </ListItemIcon>
+                                <ListItemText primary="게시글관리" />
+                            </ListItemButton>
+                        </ListItem>
+
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                component={Link}
+                                to="/admin/user"
+                                sx={menuStyle}
+                            >
+                                <ListItemIcon sx={iconStyle}>
+                                    👤
+                                </ListItemIcon>
+                                <ListItemText primary="회원관리" />
+                            </ListItemButton>
+                        </ListItem>
+                    </>
+                )}
             </List>
 
             <Box sx={{ mt: "auto", p: 2 }}>

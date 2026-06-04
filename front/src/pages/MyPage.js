@@ -15,6 +15,7 @@ function MyPage() {
     const [selectedTeams, setSelectedTeams] = useState([]);
 
     const [showGradeInfo, setShowGradeInfo] = useState(false);
+    const [isAttend, setIsAttend] = useState(false);
 
     const [stats, setStats] = useState({
         POST_CNT: 0,
@@ -245,6 +246,41 @@ function MyPage() {
             })
             .catch(err => console.log(err));
     }
+    function fnCheckAttendance() {
+        fetch("http://localhost:3010/attendance/check", {
+            headers: {
+                Authorization:
+                    "Bearer " + localStorage.getItem("token")
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setIsAttend(data.isAttend);
+                }
+            })
+            .catch(err => console.log(err));
+    }
+
+    function fnAttendance() {
+        fetch("http://localhost:3010/attendance", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization:
+                    "Bearer " + localStorage.getItem("token")
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+
+                if (data.success) {
+                    setIsAttend(true);
+                }
+            })
+            .catch(err => console.log(err));
+    }
 
     function fnTeamCheck(teamId) {
         if (selectedTeams.includes(teamId)) {
@@ -352,6 +388,7 @@ function MyPage() {
         fnGetTeamList();
         fnGetMyTeam();
         fnGetStats();
+        fnCheckAttendance();
     }, []);
 
     const fanScore = getFanScore();
@@ -422,6 +459,8 @@ function MyPage() {
                     </button>
                 </div>
             </div>
+
+
 
             <div className="mypage-card">
                 <h3 className="section-title">⚾ 팬 등급</h3>
@@ -519,6 +558,42 @@ function MyPage() {
                     )}
                 </div>
             </div>
+
+            <div className="mypage-card">
+                <h3 className="section-title">
+                    📅 출석체크
+                </h3>
+
+                {isAttend ? (
+                    <div
+                        style={{
+                            padding: "20px",
+                            color: "#2e7d32",
+                            fontWeight: "bold",
+                            fontSize: "18px"
+                        }}
+                    >
+                        ✅ 오늘 출석 완료
+                    </div>
+                ) : (
+                    <>
+                        <p>
+                            오늘 출석하면
+                            <strong> +10 팬포인트</strong>
+                            지급됩니다.
+                        </p>
+
+                        <button
+                            className="insert-btn"
+                            onClick={fnAttendance}
+                        >
+                            출석하기
+                        </button>
+                    </>
+                )}
+            </div>
+
+
 
             <div className="mypage-card">
                 <h3 className="section-title">활동 통계</h3>

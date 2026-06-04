@@ -13,6 +13,8 @@ const reportRouter = require("./routes/report");
 
 const adminRouter = require("./routes/admin");
 
+const attendanceRouter = require("./routes/attendance");
+
 // Express 객체 생성
 const app = express();
 
@@ -44,6 +46,7 @@ app.use("/like", likeRouter);
 app.use("/report", reportRouter);
 
 app.use("/admin", adminRouter);
+app.use("/attendance", attendanceRouter);
 
 // =============================
 // 기본 URL 테스트
