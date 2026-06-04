@@ -646,5 +646,109 @@ router.get("/my/:userId", async (req, res) => {
     }
 });
 
+// =========================
+// 인기글 TOP5
+// GET /post/popular
+// =========================
+
+router.get("/popular", async (req, res) => {
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        const result = await conn.execute(
+            `
+            SELECT *
+            FROM (
+                SELECT
+                    POST_ID,
+                    USER_ID,
+                    TITLE,
+                    TEAM_ID,
+                    NVL(LIKE_CNT, 0) AS LIKE_CNT,
+                    NVL(VIEW_CNT, 0) AS VIEW_CNT,
+                    (NVL(LIKE_CNT, 0) * 10 + NVL(VIEW_CNT, 0)) AS SCORE
+                FROM POST
+                WHERE POST_STATUS = 'NORMAL'
+                ORDER BY SCORE DESC
+            )
+            WHERE ROWNUM <= 5
+            `,
+            {},
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
+        );
+
+        res.json({
+            success: true,
+            list: result.rows
+        });
+
+    } catch (err) {
+        console.log("인기글 조회 에러 :", err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    } finally {
+        if (conn) await conn.close();
+    }
+});
+// =========================
+// 팀 게시글 개수 TOP3
+// GET /post/team-rank
+// =========================
+
+router.get("/team-rank", async (req, res) => {
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        const result = await conn.execute(
+            `
+            SELECT *
+            FROM (
+                SELECT
+                    P.TEAM_ID,
+                    T.TEAM_NAME,
+                    COUNT(*) AS POST_CNT
+                FROM POST P
+                JOIN TEAM T
+                    ON P.TEAM_ID = T.TEAM_ID
+                WHERE P.POST_STATUS = 'NORMAL'
+                AND P.TEAM_ID IS NOT NULL
+                GROUP BY P.TEAM_ID, T.TEAM_NAME
+                ORDER BY POST_CNT DESC
+            )
+            WHERE ROWNUM <= 3
+            `,
+            {},
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
+        );
+
+        res.json({
+            success: true,
+            list: result.rows
+        });
+
+    } catch (err) {
+        console.log("팀 게시글 순위 조회 에러 :", err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    } finally {
+        if (conn) await conn.close();
+    }
+});
 
 module.exports = router;

@@ -338,7 +338,12 @@ router.get("/stats/:userId", async (req, res) => {
                 (SELECT NVL(SUM(LIKE_CNT), 0)
                  FROM POST
                  WHERE USER_ID = :userId
-                 AND POST_STATUS = 'NORMAL') AS TOTAL_LIKE_CNT
+                 AND POST_STATUS = 'NORMAL') AS TOTAL_LIKE_CNT,
+                    (SELECT NVL(SUM(POINT), 0)
+                    FROM ATTENDANCE
+                     WHERE USER_ID = :userId) AS ATTEND_POINT
+
+
             FROM DUAL
             `,
             { userId },
@@ -770,6 +775,96 @@ router.post("/reset-password", async (req, res) => {
         if (conn) await conn.close();
     }
 });
+
+
+// =========================
+// 팬랭킹 TOP10
+// GET /user/ranking
+// =========================
+
+router.get("/ranking/top10", async (req, res) => {
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        const result = await conn.execute(
+            `
+            SELECT *
+            FROM (
+                SELECT
+                    U.USER_ID,
+                    U.NICKNAME,
+                    U.PROFILE_IMG,
+
+                    (
+                        NVL((
+                            SELECT COUNT(*)
+                            FROM POST P
+                            WHERE P.USER_ID = U.USER_ID
+                            AND P.POST_STATUS = 'NORMAL'
+                        ),0) * 10
+
+                        +
+
+                        NVL((
+                            SELECT COUNT(*)
+                            FROM POST_COMMENT C
+                            WHERE C.USER_ID = U.USER_ID
+                            AND C.COMMENT_STATUS = 'NORMAL'
+                        ),0) * 3
+
+                        +
+
+                        NVL((
+                            SELECT SUM(P2.LIKE_CNT)
+                            FROM POST P2
+                            WHERE P2.USER_ID = U.USER_ID
+                            AND P2.POST_STATUS = 'NORMAL'
+                        ),0)
+
+                        +
+
+                        NVL((
+                            SELECT SUM(A.POINT)
+                            FROM ATTENDANCE A
+                            WHERE A.USER_ID = U.USER_ID
+                        ),0)
+
+                    ) AS FAN_SCORE
+
+                FROM USERS U
+                WHERE U.USER_STATUS = 'NORMAL'
+                ORDER BY FAN_SCORE DESC
+            )
+            WHERE ROWNUM <= 10
+            `,
+            {},
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
+        );
+
+        res.json({
+            success: true,
+            list: result.rows
+        });
+
+    } catch (err) {
+
+        console.log("팬랭킹 조회 에러 :", err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    } finally {
+
+        if (conn) await conn.close();
+    }
+});
+
 
 
 // =========================

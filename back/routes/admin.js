@@ -440,4 +440,66 @@ router.put("/user/:userId/status", async (req, res) => {
 });
 
 
+
+// =========================
+// 관리자 대시보드 통계
+// GET /admin/dashboard
+// =========================
+
+router.get("/dashboard", async (req, res) => {
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        const result = await conn.execute(
+            `
+            SELECT
+                (SELECT COUNT(*)
+                 FROM USERS) AS USER_CNT,
+
+                (SELECT COUNT(*)
+                 FROM POST
+                 WHERE POST_STATUS = 'NORMAL') AS POST_CNT,
+
+                (SELECT COUNT(*)
+                 FROM POST_COMMENT
+                 WHERE COMMENT_STATUS = 'NORMAL') AS COMMENT_CNT,
+
+                (SELECT COUNT(*)
+                 FROM REPORT) AS REPORT_CNT,
+
+                (SELECT COUNT(*)
+                 FROM ATTENDANCE) AS ATTEND_CNT
+
+            FROM DUAL
+            `,
+            {},
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
+        );
+
+        res.json({
+            success: true,
+            info: result.rows[0]
+        });
+
+    } catch (err) {
+
+        console.log("관리자 대시보드 조회 에러 :", err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    } finally {
+
+        if (conn) await conn.close();
+
+    }
+});
+
+
 module.exports = router;

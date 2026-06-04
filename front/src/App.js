@@ -21,6 +21,10 @@ import TeamBoard from "./pages/TeamBoard";
 import AdminReport from './pages/AdminReport';
 import AdminPost from './pages/AdminPost';
 import AdminUser from './pages/AdminUser';
+import AdminDashboard from './pages/AdminDashboard';
+import Notification from './pages/Notification';
+import FanRanking from "./pages/FanRanking";
+import FollowList from "./pages/FollowList";
 
 
 
@@ -123,6 +127,17 @@ function App() {
           />
 
           <Route
+            path="/admin/dashboard"
+            element={
+              loginUser?.role === "ADMIN"
+                ? <AdminDashboard />
+                : <Navigate to="/main" />
+            }
+          />
+
+
+
+          <Route
             path="/admin/user"
             element={
               loginUser?.role === "ADMIN"
@@ -130,6 +145,28 @@ function App() {
                 : <Navigate to="/main" />
             }
           />
+          <Route
+            path="/notification"
+            element={token ? <Notification /> : <Navigate to="/" />}
+          />
+
+          <Route
+            path="/ranking"
+            element={token ? <FanRanking /> : <Navigate to="/" />}
+          />
+
+          <Route
+            path="/follow/follower"
+            element={token ? <FollowList /> : <Navigate to="/" />}
+          />
+
+          <Route
+            path="/follow/following"
+            element={token ? <FollowList /> : <Navigate to="/" />}
+          />
+
+
+
 
         </Routes>
       </Box>

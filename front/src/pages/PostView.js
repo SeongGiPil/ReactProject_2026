@@ -19,6 +19,14 @@ function PostView() {
     const [likeCnt, setLikeCnt] = useState(0);
     const [isLiked, setIsLiked] = useState(false);
 
+    const [followInfo, setFollowInfo] = useState({
+        isFollowing: "N",
+        followerCnt: 0,
+        followingCnt: 0
+    });
+
+
+
     const token = localStorage.getItem("token");
     const currentUser = token ? jwtDecode(token) : null;
 
@@ -211,6 +219,47 @@ function PostView() {
             .catch(err => console.log(err));
     }
 
+    function fnGetFollowInfo() {
+        if (!token || !post.USER_ID) return;
+
+        fetch("http://localhost:3010/follow/" + post.USER_ID, {
+            headers: {
+                Authorization: "Bearer " + token
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setFollowInfo(data.info);
+                }
+            })
+            .catch(err => console.log(err));
+    }
+
+    function fnToggleFollow() {
+        fetch("http://localhost:3010/follow/" + post.USER_ID, {
+            method: "POST",
+            headers: {
+                Authorization: "Bearer " + token
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+
+                if (data.success) {
+                    fnGetFollowInfo();
+                }
+            })
+            .catch(err => {
+                console.log(err);
+                alert("팔로우 처리 실패");
+            });
+    }
+
+
+
+
     function fnToggleLike() {
         if (!token) {
             alert("로그인 후 이용 가능합니다.");
@@ -308,6 +357,13 @@ function PostView() {
         fnGetCommentList();
         fnGetLike();
     }, [postId]);
+    useEffect(() => {
+        if (post.USER_ID) {
+            fnGetFollowInfo();
+        }
+    }, [post.USER_ID]);
+
+
 
     return (
         <div className="post-view-container">
@@ -325,6 +381,46 @@ function PostView() {
                 <span>작성자 : {post.USER_ID}</span>
                 <span>조회수 : {post.VIEW_CNT}</span>
             </div>
+
+            {currentUser?.userId !== post.USER_ID && (
+                <div
+                    style={{
+                        marginTop: "10px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px"
+                    }}
+                >
+                    <button
+                        onClick={fnToggleFollow}
+                        style={{
+                            padding: "6px 12px",
+                            border: "none",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            background:
+                                followInfo.isFollowing === "Y"
+                                    ? "#ff5722"
+                                    : "#2196f3",
+                            color: "white"
+                        }}
+                    >
+                        {followInfo.isFollowing === "Y"
+                            ? "언팔로우"
+                            : "팔로우"}
+                    </button>
+
+                    <span>
+                        팔로워 {followInfo.followerCnt}
+                    </span>
+
+                    <span>
+                        팔로잉 {followInfo.followingCnt}
+                    </span>
+                </div>
+            )}
+
+
 
             <div
                 style={{

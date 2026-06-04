@@ -15,6 +15,11 @@ const adminRouter = require("./routes/admin");
 
 const attendanceRouter = require("./routes/attendance");
 
+const notificationRouter = require("./routes/notification");
+
+const followRouter = require("./routes/follow");
+
+
 // Express 객체 생성
 const app = express();
 
@@ -47,6 +52,10 @@ app.use("/report", reportRouter);
 
 app.use("/admin", adminRouter);
 app.use("/attendance", attendanceRouter);
+
+app.use("/notification", notificationRouter);
+
+app.use("/follow", followRouter);
 
 // =============================
 // 기본 URL 테스트

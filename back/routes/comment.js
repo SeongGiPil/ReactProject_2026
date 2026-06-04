@@ -95,12 +95,12 @@ router.get("/:postId", async (req, res) => {
 // 댓글 등록
 // POST /comment
 // JWT 필요
+// 댓글 작성 시 게시글 작성자에게 알림 생성
 // =========================
 
 router.post("/", jwtAuthentication, async (req, res) => {
     const { postId, content, parentId } = req.body;
 
-    // JWT에서 로그인 사용자 아이디 가져오기
     const userId = req.user.userId;
 
     let conn;
@@ -140,6 +140,49 @@ router.post("/", jwtAuthentication, async (req, res) => {
             }
         );
 
+        // 게시글 작성자 조회
+        const postResult = await conn.execute(
+            `
+            SELECT USER_ID
+            FROM POST
+            WHERE POST_ID = :postId
+            AND POST_STATUS = 'NORMAL'
+            `,
+            { postId },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        // 본인 글에 본인이 댓글 작성한 경우는 알림 생성 안 함
+        if (
+            postResult.rows.length > 0 &&
+            postResult.rows[0].USER_ID !== userId
+        ) {
+            await conn.execute(
+                `
+                INSERT INTO NOTIFICATION (
+                    NOTI_ID,
+                    USER_ID,
+                    NOTI_TYPE,
+                    REF_ID,
+                    IS_READ,
+                    CDATETIME
+                )
+                VALUES (
+                    SEQ_NOTIFICATION.NEXTVAL,
+                    :targetUserId,
+                    'COMMENT',
+                    :postId,
+                    'N',
+                    SYSDATE
+                )
+                `,
+                {
+                    targetUserId: postResult.rows[0].USER_ID,
+                    postId
+                }
+            );
+        }
+
         await conn.commit();
 
         res.json({
@@ -176,7 +219,6 @@ router.post("/", jwtAuthentication, async (req, res) => {
 router.delete("/:commentId", jwtAuthentication, async (req, res) => {
     const { commentId } = req.params;
 
-    // JWT에서 로그인 사용자 아이디 가져오기
     const userId = req.user.userId;
 
     let conn;

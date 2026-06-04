@@ -91,7 +91,7 @@ router.post("/", jwtAuthentication, async (req, res) => {
                 USER_ID,
                 ATTEND_DATE,
                 POINT,
-                CDATE
+                CDATETIME
             )
             VALUES (
                 SEQ_ATTENDANCE.NEXTVAL,
@@ -146,10 +146,8 @@ router.get("/list", jwtAuthentication, async (req, res) => {
             SELECT
                 ATTEND_ID,
                 POINT,
-                TO_CHAR(
-                    ATTEND_DATE,
-                    'YYYY-MM-DD'
-                ) AS ATTEND_DATE
+                TO_CHAR(ATTEND_DATE, 'YYYY-MM-DD') AS ATTEND_DATE,
+                TO_CHAR(CDATETIME, 'YYYY-MM-DD HH24:MI') AS CDATETIME
             FROM ATTENDANCE
             WHERE USER_ID = :userId
             ORDER BY ATTEND_DATE DESC

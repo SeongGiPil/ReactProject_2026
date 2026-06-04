@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
 function MyPage() {
     const [user, setUser] = useState({});
@@ -16,12 +17,19 @@ function MyPage() {
 
     const [showGradeInfo, setShowGradeInfo] = useState(false);
     const [isAttend, setIsAttend] = useState(false);
+    const navigate = useNavigate();
 
     const [stats, setStats] = useState({
         POST_CNT: 0,
         COMMENT_CNT: 0,
-        TOTAL_LIKE_CNT: 0
+        TOTAL_LIKE_CNT: 0,
+        ATTEND_POINT: 0
     });
+    const [followInfo, setFollowInfo] = useState({
+        followerCnt: 0,
+        followingCnt: 0
+    });
+
 
     const teamIcons = {
         LG: "⚡",
@@ -50,21 +58,13 @@ function MyPage() {
 
     function getMainTeam() {
         if (selectedTeams.length === 0) {
-            return {
-                name: "통합",
-                icon: "⚾"
-            };
+            return { name: "통합", icon: "⚾" };
         }
 
-        const team = teamList.find(
-            item => item.TEAM_ID === selectedTeams[0]
-        );
+        const team = teamList.find(item => item.TEAM_ID === selectedTeams[0]);
 
         if (!team) {
-            return {
-                name: "통합",
-                icon: "⚾"
-            };
+            return { name: "통합", icon: "⚾" };
         }
 
         return {
@@ -77,28 +77,18 @@ function MyPage() {
         return (
             Number(stats.POST_CNT || 0) * 5 +
             Number(stats.COMMENT_CNT || 0) * 2 +
-            Number(stats.TOTAL_LIKE_CNT || 0)
+            Number(stats.TOTAL_LIKE_CNT || 0) +
+            Number(stats.ATTEND_POINT || 0)
         );
     }
 
     function getFanGrade() {
         const score = getFanScore();
 
-        if (score >= 500) {
-            return { name: "MVP Fan", color: "#ff5722" };
-        }
-
-        if (score >= 300) {
-            return { name: "Gold Fan", color: "#f9a825" };
-        }
-
-        if (score >= 150) {
-            return { name: "Silver Fan", color: "#90a4ae" };
-        }
-
-        if (score >= 50) {
-            return { name: "Bronze Fan", color: "#8d6e63" };
-        }
+        if (score >= 500) return { name: "MVP Fan", color: "#ff5722" };
+        if (score >= 300) return { name: "Gold Fan", color: "#f9a825" };
+        if (score >= 150) return { name: "Silver Fan", color: "#90a4ae" };
+        if (score >= 50) return { name: "Bronze Fan", color: "#8d6e63" };
 
         return { name: "Rookie Fan", color: "#1976d2" };
     }
@@ -246,11 +236,34 @@ function MyPage() {
             })
             .catch(err => console.log(err));
     }
+
+    function fnGetFollowInfo() {
+        const loginUser = getLoginUser();
+
+        if (!loginUser) return;
+
+        fetch(
+            "http://localhost:3010/follow/" + loginUser.USER_ID,
+            {
+                headers: {
+                    Authorization:
+                        "Bearer " + localStorage.getItem("token")
+                }
+            }
+        )
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setFollowInfo(data.info);
+                }
+            })
+            .catch(err => console.log(err));
+    }
+
     function fnCheckAttendance() {
         fetch("http://localhost:3010/attendance/check", {
             headers: {
-                Authorization:
-                    "Bearer " + localStorage.getItem("token")
+                Authorization: "Bearer " + localStorage.getItem("token")
             }
         })
             .then(res => res.json())
@@ -267,8 +280,7 @@ function MyPage() {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                Authorization:
-                    "Bearer " + localStorage.getItem("token")
+                Authorization: "Bearer " + localStorage.getItem("token")
             }
         })
             .then(res => res.json())
@@ -277,6 +289,7 @@ function MyPage() {
 
                 if (data.success) {
                     setIsAttend(true);
+                    fnGetStats();
                 }
             })
             .catch(err => console.log(err));
@@ -389,6 +402,7 @@ function MyPage() {
         fnGetMyTeam();
         fnGetStats();
         fnCheckAttendance();
+        fnGetFollowInfo();
     }, []);
 
     const fanScore = getFanScore();
@@ -459,8 +473,6 @@ function MyPage() {
                     </button>
                 </div>
             </div>
-
-
 
             <div className="mypage-card">
                 <h3 className="section-title">⚾ 팬 등급</h3>
@@ -548,6 +560,7 @@ function MyPage() {
                             <div>게시글 1개 = 5점</div>
                             <div>댓글 1개 = 2점</div>
                             <div>받은 좋아요 1개 = 1점</div>
+                            <div>출석체크 1회 = 10점</div>
                             <hr />
                             <div>0 ~ 49점 : {mainTeam.name} Rookie Fan ⚾</div>
                             <div>50 ~ 149점 : {mainTeam.name} Bronze Fan 🥉</div>
@@ -560,9 +573,7 @@ function MyPage() {
             </div>
 
             <div className="mypage-card">
-                <h3 className="section-title">
-                    📅 출석체크
-                </h3>
+                <h3 className="section-title">📅 출석체크</h3>
 
                 {isAttend ? (
                     <div
@@ -578,22 +589,15 @@ function MyPage() {
                 ) : (
                     <>
                         <p>
-                            오늘 출석하면
-                            <strong> +10 팬포인트</strong>
-                            지급됩니다.
+                            오늘 출석하면 <strong>+10 팬포인트</strong> 지급됩니다.
                         </p>
 
-                        <button
-                            className="insert-btn"
-                            onClick={fnAttendance}
-                        >
+                        <button className="insert-btn" onClick={fnAttendance}>
                             출석하기
                         </button>
                     </>
                 )}
             </div>
-
-
 
             <div className="mypage-card">
                 <h3 className="section-title">활동 통계</h3>
@@ -616,8 +620,52 @@ function MyPage() {
                         <div className="stats-value">{stats.TOTAL_LIKE_CNT}</div>
                         <div className="stats-title">받은 좋아요</div>
                     </div>
+
+                    <div className="stats-card">
+                        <div className="stats-icon">📅</div>
+                        <div className="stats-value">{stats.ATTEND_POINT || 0}</div>
+                        <div className="stats-title">출석포인트</div>
+                    </div>
                 </div>
             </div>
+
+            <div className="mypage-card">
+                <h3 className="section-title">
+                    👥 팔로우 정보
+                </h3>
+
+                <div
+                    style={{
+                        display: "flex",
+                        gap: "30px",
+                        fontSize: "20px",
+                        fontWeight: "bold"
+                    }}
+                >
+                    <div
+                        style={{
+                            cursor: "pointer"
+                        }}
+                        onClick={() =>
+                            navigate("/follow/follower")
+                        }
+                    >
+                        👥 팔로워 {followInfo.followerCnt}
+                    </div>
+
+                    <div
+                        style={{
+                            cursor: "pointer"
+                        }}
+                        onClick={() =>
+                            navigate("/follow/following")
+                        }
+                    >
+                        ➡️ 팔로잉 {followInfo.followingCnt}
+                    </div>
+                </div>
+            </div>
+
 
             <div className="mypage-card">
                 <h3 className="section-title">내 응원팀</h3>

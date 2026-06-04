@@ -5,7 +5,12 @@ const { jwtAuthentication } = require("../auth");
 
 const router = express.Router();
 
+
+// =========================
 // 좋아요 상태 + 개수 조회
+// GET /like/:postId
+// =========================
+
 router.get("/:postId", jwtAuthentication, async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.userId;
@@ -58,7 +63,13 @@ router.get("/:postId", jwtAuthentication, async (req, res) => {
     }
 });
 
+
+// =========================
 // 좋아요 등록/취소
+// POST /like/:postId
+// 좋아요 등록 시 게시글 작성자에게 알림 생성
+// =========================
+
 router.post("/:postId", jwtAuthentication, async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.userId;
@@ -134,6 +145,49 @@ router.post("/:postId", jwtAuthentication, async (req, res) => {
             `,
             { postId }
         );
+
+        // 게시글 작성자 조회
+        const postResult = await conn.execute(
+            `
+            SELECT USER_ID
+            FROM POST
+            WHERE POST_ID = :postId
+            AND POST_STATUS = 'NORMAL'
+            `,
+            { postId },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        // 본인 글에 좋아요 누른 경우 알림 생성 안 함
+        if (
+            postResult.rows.length > 0 &&
+            postResult.rows[0].USER_ID !== userId
+        ) {
+            await conn.execute(
+                `
+                INSERT INTO NOTIFICATION (
+                    NOTI_ID,
+                    USER_ID,
+                    NOTI_TYPE,
+                    REF_ID,
+                    IS_READ,
+                    CDATETIME
+                )
+                VALUES (
+                    SEQ_NOTIFICATION.NEXTVAL,
+                    :targetUserId,
+                    'LIKE',
+                    :postId,
+                    'N',
+                    SYSDATE
+                )
+                `,
+                {
+                    targetUserId: postResult.rows[0].USER_ID,
+                    postId
+                }
+            );
+        }
 
         await conn.commit();
 

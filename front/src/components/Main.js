@@ -51,28 +51,13 @@ function Main() {
     }
 
     function fnGetMainData() {
-        fetch("http://localhost:3010/post/list")
+        fetch("http://localhost:3010/post/popular")
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
                     const list = data.list || [];
 
-                    const popularPosts = [...list]
-                        .sort((a, b) => {
-                            const likeDiff =
-                                Number(b.LIKE_CNT || 0) -
-                                Number(a.LIKE_CNT || 0);
-
-                            if (likeDiff !== 0) {
-                                return likeDiff;
-                            }
-
-                            return Number(b.VIEW_CNT || 0) -
-                                Number(a.VIEW_CNT || 0);
-                        })
-                        .slice(0, 5);
-
-                    setPopularPostList(popularPosts);
+                    setPopularPostList(list);
 
                     const teamMap = {};
 
@@ -107,8 +92,33 @@ function Main() {
             });
     }
 
+    function fnGetTeamRank() {
+    fetch("http://localhost:3010/post/team-rank")
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const list = (data.list || []).map(item => {
+                    const teamInfo = getTeamInfo(item.TEAM_ID);
+
+                    return {
+                        teamId: item.TEAM_ID,
+                        name: item.TEAM_NAME,
+                        icon: teamInfo.icon,
+                        count: item.POST_CNT
+                    };
+                });
+
+                setPopularTeamList(list);
+            }
+        })
+        .catch(err => console.log(err));
+}
+
+
+
     useEffect(() => {
         fnGetMainData();
+        fnGetTeamRank();
     }, []);
 
     useEffect(() => {
