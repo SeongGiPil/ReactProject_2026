@@ -20,6 +20,8 @@ const notificationRouter = require("./routes/notification");
 const followRouter = require("./routes/follow");
 
 
+const bannerRouter = require("./routes/banner");
+
 // Express 객체 생성
 const app = express();
 
@@ -56,6 +58,8 @@ app.use("/attendance", attendanceRouter);
 app.use("/notification", notificationRouter);
 
 app.use("/follow", followRouter);
+
+app.use("/banner", bannerRouter);
 
 // =============================
 // 기본 URL 테스트

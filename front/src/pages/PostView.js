@@ -25,8 +25,6 @@ function PostView() {
         followingCnt: 0
     });
 
-
-
     const token = localStorage.getItem("token");
     const currentUser = token ? jwtDecode(token) : null;
 
@@ -82,12 +80,6 @@ function PostView() {
             return;
         }
 
-        if (!token) {
-            alert("로그인 후 이용 가능합니다.");
-            navigate("/");
-            return;
-        }
-
         fetch("http://localhost:3010/post/update/" + postId, {
             method: "PUT",
             headers: {
@@ -111,7 +103,6 @@ function PostView() {
                         TITLE: title,
                         CONTENT: content
                     });
-
                     setIsEdit(false);
                 }
             })
@@ -122,15 +113,7 @@ function PostView() {
     }
 
     function fnDelete() {
-        if (!window.confirm("정말 삭제하시겠습니까?")) {
-            return;
-        }
-
-        if (!token) {
-            alert("로그인 후 이용 가능합니다.");
-            navigate("/");
-            return;
-        }
+        if (!window.confirm("정말 삭제하시겠습니까?")) return;
 
         fetch("http://localhost:3010/post/delete/" + postId, {
             method: "DELETE",
@@ -162,9 +145,7 @@ function PostView() {
             "신고 사유를 입력하세요.\n\n욕설\n광고\n도배\n부적절한 내용\n기타"
         );
 
-        if (!reason) {
-            return;
-        }
+        if (!reason) return;
 
         fetch("http://localhost:3010/report", {
             method: "POST",
@@ -204,7 +185,6 @@ function PostView() {
         if (!token) return;
 
         fetch("http://localhost:3010/like/" + postId, {
-            method: "GET",
             headers: {
                 Authorization: "Bearer " + token
             }
@@ -237,6 +217,12 @@ function PostView() {
     }
 
     function fnToggleFollow() {
+        if (!token) {
+            alert("로그인 후 이용 가능합니다.");
+            navigate("/");
+            return;
+        }
+
         fetch("http://localhost:3010/follow/" + post.USER_ID, {
             method: "POST",
             headers: {
@@ -256,9 +242,6 @@ function PostView() {
                 alert("팔로우 처리 실패");
             });
     }
-
-
-
 
     function fnToggleLike() {
         if (!token) {
@@ -327,9 +310,7 @@ function PostView() {
     }
 
     function fnDeleteComment(commentId) {
-        if (!window.confirm("댓글을 삭제하시겠습니까?")) {
-            return;
-        }
+        if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
 
         fetch("http://localhost:3010/comment/" + commentId, {
             method: "DELETE",
@@ -357,13 +338,12 @@ function PostView() {
         fnGetCommentList();
         fnGetLike();
     }, [postId]);
+
     useEffect(() => {
         if (post.USER_ID) {
             fnGetFollowInfo();
         }
     }, [post.USER_ID]);
-
-
 
     return (
         <div className="post-view-container">
@@ -379,6 +359,16 @@ function PostView() {
 
             <div className="post-info-row">
                 <span>작성자 : {post.USER_ID}</span>
+
+                {post.USER_ID && (
+                    <button
+                        className="list-btn"
+                        onClick={() => navigate("/user/" + post.USER_ID)}
+                    >
+                        프로필
+                    </button>
+                )}
+
                 <span>조회수 : {post.VIEW_CNT}</span>
             </div>
 
@@ -410,17 +400,10 @@ function PostView() {
                             : "팔로우"}
                     </button>
 
-                    <span>
-                        팔로워 {followInfo.followerCnt}
-                    </span>
-
-                    <span>
-                        팔로잉 {followInfo.followingCnt}
-                    </span>
+                    <span>팔로워 {followInfo.followerCnt}</span>
+                    <span>팔로잉 {followInfo.followingCnt}</span>
                 </div>
             )}
-
-
 
             <div
                 style={{
@@ -430,11 +413,8 @@ function PostView() {
                     color: "#ff9800"
                 }}
             >
-                {getTeamIcon(post.WRITER_TEAM_NAME)}
-                {" "}
-                {post.WRITER_TEAM_NAME || "통합"}
-                {" "}
-                {getFanGrade(post)}
+                {getTeamIcon(post.WRITER_TEAM_NAME)}{" "}
+                {post.WRITER_TEAM_NAME || "통합"} {getFanGrade(post)}
             </div>
 
             <div className="post-stats">
@@ -467,9 +447,7 @@ function PostView() {
                     onChange={(e) => setContent(e.target.value)}
                 />
             ) : (
-                <div className="post-content">
-                    {post.CONTENT}
-                </div>
+                <div className="post-content">{post.CONTENT}</div>
             )}
 
             <div className="post-action-area">
@@ -480,10 +458,7 @@ function PostView() {
                     {isLiked ? "❤️" : "🤍"} 좋아요 {likeCnt}
                 </button>
 
-                <button
-                    className="report-btn"
-                    onClick={fnReport}
-                >
+                <button className="report-btn" onClick={fnReport}>
                     🚨 신고
                 </button>
 
@@ -548,10 +523,8 @@ function PostView() {
                                         marginTop: "3px"
                                     }}
                                 >
-                                    {getTeamIcon(item.WRITER_TEAM_NAME)}
-                                    {" "}
-                                    {item.WRITER_TEAM_NAME || "통합"}
-                                    {" "}
+                                    {getTeamIcon(item.WRITER_TEAM_NAME)}{" "}
+                                    {item.WRITER_TEAM_NAME || "통합"}{" "}
                                     {getFanGrade(item)}
                                 </div>
                             </div>
@@ -559,9 +532,7 @@ function PostView() {
                             <small>{item.CDATETIME}</small>
                         </div>
 
-                        <div className="comment-content">
-                            {item.CONTENT}
-                        </div>
+                        <div className="comment-content">{item.CONTENT}</div>
 
                         {currentUser?.userId === item.USER_ID && (
                             <button

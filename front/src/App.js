@@ -25,7 +25,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Notification from './pages/Notification';
 import FanRanking from "./pages/FanRanking";
 import FollowList from "./pages/FollowList";
-
+import UserProfile from "./pages/UserProfile";
 
 
 
@@ -164,6 +164,11 @@ function App() {
             path="/follow/following"
             element={token ? <FollowList /> : <Navigate to="/" />}
           />
+          <Route
+            path="/user/:userId"
+            element={token ? <UserProfile /> : <Navigate to="/" />}
+          />
+
 
 
 

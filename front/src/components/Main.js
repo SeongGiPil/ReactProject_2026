@@ -7,6 +7,7 @@ function Main() {
     const [popularPostList, setPopularPostList] = useState([]);
     const [popularTeamList, setPopularTeamList] = useState([]);
     const [bannerIndex, setBannerIndex] = useState(0);
+    const [dbBannerList, setDbBannerList] = useState([]);
 
     const teams = [
         { id: 1, name: "LG", icon: "⚡" },
@@ -21,7 +22,7 @@ function Main() {
         { id: 10, name: "키움", icon: "🦸" }
     ];
 
-    const banners = [
+    const defaultBanners = [
         {
             title: "🎁 SpoTalk 응원 이벤트",
             text: "게시글 작성하고 좋아요 받으면 인기팬 TOP10 선정!",
@@ -42,6 +43,17 @@ function Main() {
         }
     ];
 
+    const banners =
+        dbBannerList.length > 0
+            ? dbBannerList.map(item => ({
+                title: "📢 SpoTalk 배너 광고",
+                text: item.ORIGIN_NAME || item.FILE_NAME,
+                button: "자세히 보기",
+                link: "/feed",
+                image: "http://localhost:3010" + item.FILE_PATH
+            }))
+            : defaultBanners;
+
     function getTeamInfo(teamId) {
         return teams.find(team => team.id === Number(teamId)) || {
             id: 0,
@@ -50,75 +62,54 @@ function Main() {
         };
     }
 
+    function fnGetBanner() {
+        fetch("http://localhost:3010/banner")
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setDbBannerList(data.list || []);
+                }
+            })
+            .catch(err => console.log(err));
+    }
+
     function fnGetMainData() {
         fetch("http://localhost:3010/post/popular")
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    const list = data.list || [];
-
-                    setPopularPostList(list);
-
-                    const teamMap = {};
-
-                    list.forEach(post => {
-                        if (post.TEAM_ID) {
-                            const id = Number(post.TEAM_ID);
-
-                            if (!teamMap[id]) {
-                                const teamInfo = getTeamInfo(id);
-
-                                teamMap[id] = {
-                                    teamId: id,
-                                    name: teamInfo.name,
-                                    icon: teamInfo.icon,
-                                    count: 0
-                                };
-                            }
-
-                            teamMap[id].count += 1;
-                        }
-                    });
-
-                    const teamRank = Object.values(teamMap)
-                        .sort((a, b) => b.count - a.count)
-                        .slice(0, 3);
-
-                    setPopularTeamList(teamRank);
+                    setPopularPostList(data.list || []);
                 }
             })
-            .catch(err => {
-                console.log(err);
-            });
+            .catch(err => console.log(err));
     }
 
     function fnGetTeamRank() {
-    fetch("http://localhost:3010/post/team-rank")
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                const list = (data.list || []).map(item => {
-                    const teamInfo = getTeamInfo(item.TEAM_ID);
+        fetch("http://localhost:3010/post/team-rank")
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const list = (data.list || []).map(item => {
+                        const teamInfo = getTeamInfo(item.TEAM_ID);
 
-                    return {
-                        teamId: item.TEAM_ID,
-                        name: item.TEAM_NAME,
-                        icon: teamInfo.icon,
-                        count: item.POST_CNT
-                    };
-                });
+                        return {
+                            teamId: item.TEAM_ID,
+                            name: item.TEAM_NAME,
+                            icon: teamInfo.icon,
+                            count: item.POST_CNT
+                        };
+                    });
 
-                setPopularTeamList(list);
-            }
-        })
-        .catch(err => console.log(err));
-}
-
-
+                    setPopularTeamList(list);
+                }
+            })
+            .catch(err => console.log(err));
+    }
 
     useEffect(() => {
         fnGetMainData();
         fnGetTeamRank();
+        fnGetBanner();
     }, []);
 
     useEffect(() => {
@@ -129,9 +120,9 @@ function Main() {
         }, 3000);
 
         return () => clearInterval(timer);
-    }, []);
+    }, [banners.length]);
 
-    const currentBanner = banners[bannerIndex];
+    const currentBanner = banners[bannerIndex] || defaultBanners[0];
 
     return (
         <div style={pageStyle}>
@@ -141,9 +132,7 @@ function Main() {
 
             <div style={heroStyle}>
                 <div style={logoBallStyle}>⚾</div>
-
                 <h1 style={titleStyle}>SpoTalk</h1>
-
                 <p style={subTitleStyle}>야구 팬들의 소통 공간</p>
 
                 <div style={buttonBoxStyle}>
@@ -157,7 +146,14 @@ function Main() {
                 </div>
             </div>
 
-            <div style={bannerStyle}>
+            <div
+                style={{
+                    ...bannerStyle,
+                    background: currentBanner.image
+                        ? `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url(${currentBanner.image}) center/cover`
+                        : "linear-gradient(90deg,#4A8CFF,#79B8FF)"
+                }}
+            >
                 <div>
                     <h2 style={{ margin: 0 }}>
                         {currentBanner.title}
@@ -190,9 +186,7 @@ function Main() {
             </div>
 
             <div style={teamSectionStyle}>
-                <h3 style={sectionTitleStyle}>
-                    ⚾ 팀 게시판 바로가기 💙
-                </h3>
+                <h3 style={sectionTitleStyle}>⚾ 팀 게시판 바로가기 💙</h3>
 
                 <div style={teamGridStyle}>
                     {teams.map(team => (
@@ -200,16 +194,6 @@ function Main() {
                             key={team.id}
                             style={teamCardStyle}
                             onClick={() => navigate("/team/" + team.id)}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = "translateY(-5px)";
-                                e.currentTarget.style.boxShadow =
-                                    "0 12px 25px rgba(74,140,255,0.25)";
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = "translateY(0)";
-                                e.currentTarget.style.boxShadow =
-                                    "0 6px 15px rgba(0,0,0,0.08)";
-                            }}
                         >
                             <div style={teamIconStyle}>{team.icon}</div>
                             <div style={teamNameStyle}>{team.name}</div>
@@ -220,9 +204,7 @@ function Main() {
 
             <div style={rankSectionStyle}>
                 <div style={rankCardStyle}>
-                    <h3 style={rankTitleStyle}>
-                        🏆 인기팀 TOP3
-                    </h3>
+                    <h3 style={rankTitleStyle}>🏆 인기팀 TOP3</h3>
 
                     {popularTeamList.length === 0 ? (
                         <div style={postItemStyle}>
@@ -237,14 +219,10 @@ function Main() {
                                 onClick={() => navigate("/team/" + team.teamId)}
                             >
                                 <span>
-                                    {idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉"}
-                                    {" "}
+                                    {idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉"}{" "}
                                     {team.icon} {team.name}
                                 </span>
-
-                                <span>
-                                    {team.count}개
-                                </span>
+                                <span>{team.count}개</span>
                             </div>
                         ))
                     )}
@@ -252,9 +230,7 @@ function Main() {
 
                 <div style={rankCardStyle}>
                     <div style={postHeaderStyle}>
-                        <h3 style={{ margin: 0 }}>
-                            🔥 인기글 TOP5
-                        </h3>
+                        <h3 style={{ margin: 0 }}>🔥 인기글 TOP5</h3>
 
                         <Link to="/feed" style={moreStyle}>
                             더보기 〉
@@ -278,16 +254,13 @@ function Main() {
                                 }}
                             >
                                 <span>
-                                    {idx + 1}. {item.TITLE}
-                                    {" "}
+                                    {idx + 1}. {item.TITLE}{" "}
                                     <span style={{ color: "#1976d2" }}>
                                         [{item.COMMENT_CNT || 0}]
                                     </span>
                                 </span>
 
-                                <span>
-                                    💙 {item.LIKE_CNT}
-                                </span>
+                                <span>💙 {item.LIKE_CNT}</span>
                             </Link>
                         ))
                     )}
@@ -299,8 +272,7 @@ function Main() {
 
 const pageStyle = {
     minHeight: "100vh",
-    background:
-        "linear-gradient(180deg, #BFEAFF 0%, #EAF8FF 60%, #D6F4FF 100%)",
+    background: "linear-gradient(180deg, #BFEAFF 0%, #EAF8FF 60%, #D6F4FF 100%)",
     color: "#17406F",
     padding: "20px 30px",
     position: "relative",
@@ -390,8 +362,8 @@ const whiteBtnStyle = {
 const bannerStyle = {
     width: "95%",
     maxWidth: "1200px",
+    height: "170px",
     margin: "20px auto 8px",
-    background: "linear-gradient(90deg,#4A8CFF,#79B8FF)",
     color: "white",
     borderRadius: "24px",
     padding: "25px 35px",

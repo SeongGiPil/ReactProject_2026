@@ -7,15 +7,102 @@ const router = express.Router();
 
 
 // =========================
+// 내가 팔로우한 사람 목록
+// GET /follow/following/list
+// =========================
+router.get("/following/list", jwtAuthentication, async (req, res) => {
+    const loginUserId = req.user.userId;
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        const result = await conn.execute(
+            `
+            SELECT
+                U.USER_ID,
+                U.NICKNAME,
+                U.PROFILE_IMG,
+                F.CDATETIME
+            FROM USER_FOLLOW F
+            JOIN USERS U
+                ON F.FOLLOWING_ID = U.USER_ID
+            WHERE F.FOLLOWER_ID = :loginUserId
+            ORDER BY F.FOLLOW_ID DESC
+            `,
+            { loginUserId },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        res.json({
+            success: true,
+            list: result.rows
+        });
+
+    } catch (err) {
+        console.log("팔로잉 목록 조회 에러 :", err);
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    } finally {
+        if (conn) await conn.close();
+    }
+});
+
+
+// =========================
+// 나를 팔로우한 사람 목록
+// GET /follow/follower/list
+// =========================
+router.get("/follower/list", jwtAuthentication, async (req, res) => {
+    const loginUserId = req.user.userId;
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        const result = await conn.execute(
+            `
+            SELECT
+                U.USER_ID,
+                U.NICKNAME,
+                U.PROFILE_IMG,
+                F.CDATETIME
+            FROM USER_FOLLOW F
+            JOIN USERS U
+                ON F.FOLLOWER_ID = U.USER_ID
+            WHERE F.FOLLOWING_ID = :loginUserId
+            ORDER BY F.FOLLOW_ID DESC
+            `,
+            { loginUserId },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        res.json({
+            success: true,
+            list: result.rows
+        });
+
+    } catch (err) {
+        console.log("팔로워 목록 조회 에러 :", err);
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    } finally {
+        if (conn) await conn.close();
+    }
+});
+
+
+// =========================
 // 팔로우 상태 + 팔로워/팔로잉 수 조회
 // GET /follow/:targetUserId
-// JWT 필요
 // =========================
-
 router.get("/:targetUserId", jwtAuthentication, async (req, res) => {
     const loginUserId = req.user.userId;
     const { targetUserId } = req.params;
-
     let conn;
 
     try {
@@ -42,23 +129,16 @@ router.get("/:targetUserId", jwtAuthentication, async (req, res) => {
                     FROM USER_FOLLOW
                     WHERE FOLLOWER_ID = :targetUserId
                 ) AS FOLLOWING_CNT
-
             FROM DUAL
             `,
-            {
-                loginUserId,
-                targetUserId
-            },
-            {
-                outFormat: oracledb.OUT_FORMAT_OBJECT
-            }
+            { loginUserId, targetUserId },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
         res.json({
             success: true,
             info: {
-                isFollowing:
-                    result.rows[0].IS_FOLLOWING > 0 ? "Y" : "N",
+                isFollowing: result.rows[0].IS_FOLLOWING > 0 ? "Y" : "N",
                 followerCnt: result.rows[0].FOLLOWER_CNT,
                 followingCnt: result.rows[0].FOLLOWING_CNT
             }
@@ -66,12 +146,10 @@ router.get("/:targetUserId", jwtAuthentication, async (req, res) => {
 
     } catch (err) {
         console.log("팔로우 상태 조회 에러 :", err);
-
         res.status(500).json({
             success: false,
             message: err.message
         });
-
     } finally {
         if (conn) await conn.close();
     }
@@ -81,13 +159,10 @@ router.get("/:targetUserId", jwtAuthentication, async (req, res) => {
 // =========================
 // 팔로우 / 언팔로우
 // POST /follow/:targetUserId
-// JWT 필요
 // =========================
-
 router.post("/:targetUserId", jwtAuthentication, async (req, res) => {
     const loginUserId = req.user.userId;
     const { targetUserId } = req.params;
-
     let conn;
 
     try {
@@ -107,13 +182,8 @@ router.post("/:targetUserId", jwtAuthentication, async (req, res) => {
             WHERE FOLLOWER_ID = :loginUserId
             AND FOLLOWING_ID = :targetUserId
             `,
-            {
-                loginUserId,
-                targetUserId
-            },
-            {
-                outFormat: oracledb.OUT_FORMAT_OBJECT
-            }
+            { loginUserId, targetUserId },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
         if (check.rows.length > 0) {
@@ -123,10 +193,7 @@ router.post("/:targetUserId", jwtAuthentication, async (req, res) => {
                 WHERE FOLLOWER_ID = :loginUserId
                 AND FOLLOWING_ID = :targetUserId
                 `,
-                {
-                    loginUserId,
-                    targetUserId
-                }
+                { loginUserId, targetUserId }
             );
 
             await conn.commit();
@@ -153,10 +220,7 @@ router.post("/:targetUserId", jwtAuthentication, async (req, res) => {
                 SYSDATE
             )
             `,
-            {
-                loginUserId,
-                targetUserId
-            }
+            { loginUserId, targetUserId }
         );
 
         await conn.commit();
@@ -176,115 +240,6 @@ router.post("/:targetUserId", jwtAuthentication, async (req, res) => {
             success: false,
             message: err.message
         });
-
-    } finally {
-        if (conn) await conn.close();
-    }
-});
-
-
-// =========================
-// 내가 팔로우한 사람 목록
-// GET /follow/following/list
-// JWT 필요
-// =========================
-
-router.get("/following/list", jwtAuthentication, async (req, res) => {
-    const loginUserId = req.user.userId;
-
-    let conn;
-
-    try {
-        conn = await db.getConnection();
-
-        const result = await conn.execute(
-            `
-            SELECT
-                U.USER_ID,
-                U.NICKNAME,
-                U.PROFILE_IMG,
-                F.CDATETIME
-            FROM USER_FOLLOW F
-            JOIN USERS U
-                ON F.FOLLOWING_ID = U.USER_ID
-            WHERE F.FOLLOWER_ID = :loginUserId
-            ORDER BY F.FOLLOW_ID DESC
-            `,
-            {
-                loginUserId
-            },
-            {
-                outFormat: oracledb.OUT_FORMAT_OBJECT
-            }
-        );
-
-        res.json({
-            success: true,
-            list: result.rows
-        });
-
-    } catch (err) {
-        console.log("팔로잉 목록 조회 에러 :", err);
-
-        res.status(500).json({
-            success: false,
-            message: err.message
-        });
-
-    } finally {
-        if (conn) await conn.close();
-    }
-});
-
-
-// =========================
-// 나를 팔로우한 사람 목록
-// GET /follow/follower/list
-// JWT 필요
-// =========================
-
-router.get("/follower/list", jwtAuthentication, async (req, res) => {
-    const loginUserId = req.user.userId;
-
-    let conn;
-
-    try {
-        conn = await db.getConnection();
-
-        const result = await conn.execute(
-            `
-            SELECT
-                U.USER_ID,
-                U.NICKNAME,
-                U.PROFILE_IMG,
-                F.CDATETIME
-            FROM USER_FOLLOW F
-            JOIN USERS U
-                ON F.FOLLOWER_ID = U.USER_ID
-            WHERE F.FOLLOWING_ID = :loginUserId
-            ORDER BY F.FOLLOW_ID DESC
-            `,
-            {
-                loginUserId
-            },
-            {
-                outFormat: oracledb.OUT_FORMAT_OBJECT
-            }
-        );
-
-        res.json({
-            success: true,
-            list: result.rows
-        });
-
-    } catch (err) {
-        console.log("팔로워 목록 조회 에러 :", err);
-
-        res.status(500).json({
-            success: false,
-            message: err.message
-        });
-
     } finally {
         if (conn) await conn.close();
     }

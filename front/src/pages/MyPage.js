@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +18,7 @@ function MyPage() {
 
     const [showGradeInfo, setShowGradeInfo] = useState(false);
     const [isAttend, setIsAttend] = useState(false);
+
     const navigate = useNavigate();
 
     const [stats, setStats] = useState({
@@ -25,11 +27,11 @@ function MyPage() {
         TOTAL_LIKE_CNT: 0,
         ATTEND_POINT: 0
     });
+
     const [followInfo, setFollowInfo] = useState({
         followerCnt: 0,
         followingCnt: 0
     });
-
 
     const teamIcons = {
         LG: "⚡",
@@ -102,7 +104,8 @@ function MyPage() {
                 remainScore: 0,
                 needPost: 0,
                 needComment: 0,
-                needLike: 0
+                needLike: 0,
+                needAttend: 0
             };
         }
 
@@ -127,7 +130,8 @@ function MyPage() {
             remainScore,
             needPost: Math.ceil(remainScore / 5),
             needComment: Math.ceil(remainScore / 2),
-            needLike: remainScore
+            needLike: remainScore,
+            needAttend: Math.ceil(remainScore / 10)
         };
     }
 
@@ -239,18 +243,13 @@ function MyPage() {
 
     function fnGetFollowInfo() {
         const loginUser = getLoginUser();
-
         if (!loginUser) return;
 
-        fetch(
-            "http://localhost:3010/follow/" + loginUser.USER_ID,
-            {
-                headers: {
-                    Authorization:
-                        "Bearer " + localStorage.getItem("token")
-                }
+        fetch("http://localhost:3010/follow/" + loginUser.USER_ID, {
+            headers: {
+                Authorization: "Bearer " + localStorage.getItem("token")
             }
-        )
+        })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -418,15 +417,26 @@ function MyPage() {
                 <h3 className="section-title">회원정보수정</h3>
 
                 <div className="profile-box">
-                    <img
-                        src={
-                            user.PROFILE_IMG
-                                ? "http://localhost:3010" + user.PROFILE_IMG
-                                : ""
-                        }
-                        alt="프로필"
-                        className="profile-img"
-                    />
+                    {user.PROFILE_IMG ? (
+                        <img
+                            src={"http://localhost:3010" + user.PROFILE_IMG}
+                            alt="프로필"
+                            className="profile-img"
+                        />
+                    ) : (
+                        <div
+                            className="profile-img"
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "40px",
+                                background: "#eee"
+                            }}
+                        >
+                            👤
+                        </div>
+                    )}
 
                     <div className="profile-info">
                         <div className="profile-name">{user.NICKNAME}</div>
@@ -436,10 +446,15 @@ function MyPage() {
                             <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => setProfileFile(e.target.files[0])}
+                                onChange={(e) =>
+                                    setProfileFile(e.target.files[0])
+                                }
                             />
 
-                            <button className="insert-btn" onClick={fnProfileUpload}>
+                            <button
+                                className="insert-btn"
+                                onClick={fnProfileUpload}
+                            >
                                 변경
                             </button>
                         </div>
@@ -499,6 +514,25 @@ function MyPage() {
                         팬 활동지수 : <strong>{fanScore}점</strong>
                     </div>
 
+                    <div
+                        style={{
+                            width: "100%",
+                            height: "12px",
+                            background: "#ddd",
+                            borderRadius: "10px",
+                            marginTop: "15px"
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: `${Math.min((fanScore / 500) * 100, 100)}%`,
+                                height: "100%",
+                                background: fanGrade.color,
+                                borderRadius: "10px"
+                            }}
+                        />
+                    </div>
+
                     <div style={{ marginTop: "15px" }}>
                         {nextGradeInfo.remainScore === 0 ? (
                             <strong>최고 등급을 달성했습니다! 🔥</strong>
@@ -535,6 +569,10 @@ function MyPage() {
                             <div>
                                 ❤️ 좋아요만 받으면{" "}
                                 <strong>{nextGradeInfo.needLike}개</strong> 필요
+                            </div>
+                            <div>
+                                📅 출석만 하면{" "}
+                                <strong>{nextGradeInfo.needAttend}일</strong> 더 필요
                             </div>
                         </div>
                     )}
@@ -623,16 +661,16 @@ function MyPage() {
 
                     <div className="stats-card">
                         <div className="stats-icon">📅</div>
-                        <div className="stats-value">{stats.ATTEND_POINT || 0}</div>
+                        <div className="stats-value">
+                            {stats.ATTEND_POINT || 0}
+                        </div>
                         <div className="stats-title">출석포인트</div>
                     </div>
                 </div>
             </div>
 
             <div className="mypage-card">
-                <h3 className="section-title">
-                    👥 팔로우 정보
-                </h3>
+                <h3 className="section-title">👥 팔로우 정보</h3>
 
                 <div
                     style={{
@@ -643,29 +681,20 @@ function MyPage() {
                     }}
                 >
                     <div
-                        style={{
-                            cursor: "pointer"
-                        }}
-                        onClick={() =>
-                            navigate("/follow/follower")
-                        }
+                        style={{ cursor: "pointer" }}
+                        onClick={() => navigate("/follow/follower")}
                     >
                         👥 팔로워 {followInfo.followerCnt}
                     </div>
 
                     <div
-                        style={{
-                            cursor: "pointer"
-                        }}
-                        onClick={() =>
-                            navigate("/follow/following")
-                        }
+                        style={{ cursor: "pointer" }}
+                        onClick={() => navigate("/follow/following")}
                     >
                         ➡️ 팔로잉 {followInfo.followingCnt}
                     </div>
                 </div>
             </div>
-
 
             <div className="mypage-card">
                 <h3 className="section-title">내 응원팀</h3>
@@ -723,7 +752,8 @@ function MyPage() {
                                     <td>{item.VIEW_CNT}</td>
                                     <td>
                                         {item.CDATETIME &&
-                                            new Date(item.CDATETIME).toLocaleDateString("ko-KR")}
+                                            new Date(item.CDATETIME)
+                                                .toLocaleDateString("ko-KR")}
                                     </td>
                                 </tr>
                             ))
