@@ -6,6 +6,45 @@ const { jwtAuthentication } = require("../auth");
 const router = express.Router();
 
 
+// 읽지 않은 알림 개수
+// GET /notification/count
+router.get("/count", jwtAuthentication, async (req, res) => {
+    const loginUserId = req.user.userId;
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        const result = await conn.execute(
+            `
+            SELECT COUNT(*) AS CNT
+            FROM NOTIFICATION
+            WHERE USER_ID = :loginUserId
+            AND IS_READ = 'N'
+            `,
+            { loginUserId },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        res.json({
+            success: true,
+            count: result.rows[0].CNT
+        });
+
+    } catch (err) {
+        console.log("알림 개수 조회 에러 :", err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    } finally {
+        if (conn) await conn.close();
+    }
+});
+
+
 // 내 알림 목록 조회
 // GET /notification
 router.get("/", jwtAuthentication, async (req, res) => {
@@ -92,6 +131,7 @@ router.put("/read/:notiId", jwtAuthentication, async (req, res) => {
         if (conn) await conn.close();
     }
 });
+
 
 
 module.exports = router;

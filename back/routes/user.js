@@ -776,10 +776,9 @@ router.post("/reset-password", async (req, res) => {
     }
 });
 
-
 // =========================
 // 팬랭킹 TOP10
-// GET /user/ranking
+// GET /user/ranking/top10
 // =========================
 
 router.get("/ranking/top10", async (req, res) => {
@@ -803,7 +802,7 @@ router.get("/ranking/top10", async (req, res) => {
                             FROM POST P
                             WHERE P.USER_ID = U.USER_ID
                             AND P.POST_STATUS = 'NORMAL'
-                        ),0) * 10
+                        ),0) * 5
 
                         +
 
@@ -812,7 +811,7 @@ router.get("/ranking/top10", async (req, res) => {
                             FROM POST_COMMENT C
                             WHERE C.USER_ID = U.USER_ID
                             AND C.COMMENT_STATUS = 'NORMAL'
-                        ),0) * 3
+                        ),0) * 2
 
                         +
 
@@ -851,7 +850,6 @@ router.get("/ranking/top10", async (req, res) => {
         });
 
     } catch (err) {
-
         console.log("팬랭킹 조회 에러 :", err);
 
         res.status(500).json({
@@ -860,7 +858,6 @@ router.get("/ranking/top10", async (req, res) => {
         });
 
     } finally {
-
         if (conn) await conn.close();
     }
 });
