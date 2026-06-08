@@ -23,10 +23,10 @@ SpoTalk에서 응원팀을 선택하고, 게시글과 댓글, 좋아요, 팔로�
 
 🛠 기술 스택
 ## Front-End
-React 18
-React Router v6
-Material UI (MUI)
-JWT Decode
+-React 18
+-React Router v6
+-Material UI (MUI)
+-JWT Decode
 ## Back-End
 Node.js
 Express
