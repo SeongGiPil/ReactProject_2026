@@ -1,21 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function Notification() {
-    const [notiList, setNotiList] = useState([]);
+    const [list, setList] = useState([]);
+    const navigate = useNavigate();
 
-    function fnGetNotificationList() {
-        fetch("http://localhost:3010/notification/list", {
+    function getNotificationText(item) {
+        if (item.NOTI_TYPE === "FOLLOW") {
+            return "새로운 팔로워가 생겼습니다.";
+        }
+
+        if (item.NOTI_TYPE === "LIKE") {
+            return "내 게시글에 좋아요가 눌렸습니다.";
+        }
+
+        if (item.NOTI_TYPE === "COMMENT") {
+            return "내 게시글에 댓글이 달렸습니다.";
+        }
+
+        return "새 알림이 있습니다.";
+    }
+
+    function fnGetList() {
+        fetch("http://localhost:3010/notification", {
             headers: {
                 Authorization: "Bearer " + localStorage.getItem("token")
             }
         })
             .then(res => res.json())
             .then(data => {
-                console.log("알림 목록 :", data);
-
                 if (data.success) {
-                    setNotiList(data.list || []);
+                    setList(data.list || []);
                 }
             })
             .catch(err => {
@@ -24,7 +39,7 @@ function Notification() {
             });
     }
 
-    function fnReadNotification(notiId) {
+    function fnRead(notiId) {
         fetch("http://localhost:3010/notification/read/" + notiId, {
             method: "PUT",
             headers: {
@@ -34,70 +49,43 @@ function Notification() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    fnGetNotificationList();
+                    fnGetList();
                 }
             })
-            .catch(err => console.log(err));
+            .catch(err => {
+                console.log(err);
+                alert("읽음 처리 실패");
+            });
     }
 
-    function fnReadAll() {
-        fetch("http://localhost:3010/notification/read-all", {
-            method: "PUT",
-            headers: {
-                Authorization: "Bearer " + localStorage.getItem("token")
+    function fnMoveNotification(item) {
+        if (item.IS_READ === "N") {
+            fnRead(item.NOTI_ID);
+        }
+
+        if (item.NOTI_TYPE === "FOLLOW") {
+            navigate("/follow/follower");
+            return;
+        }
+
+        if (item.NOTI_TYPE === "LIKE" || item.NOTI_TYPE === "COMMENT") {
+            if (item.REF_ID) {
+                navigate("/post/" + item.REF_ID);
             }
-        })
-            .then(res => res.json())
-            .then(data => {
-                alert(data.message);
-
-                if (data.success) {
-                    fnGetNotificationList();
-                }
-            })
-            .catch(err => console.log(err));
-    }
-
-    function getTypeIcon(type) {
-        if (type === "COMMENT") return "💬";
-        if (type === "LIKE") return "❤️";
-        if (type === "REPORT") return "🚨";
-        if (type === "REPLY") return "↩️";
-        return "🔔";
+            return;
+        }
     }
 
     useEffect(() => {
-        fnGetNotificationList();
+        fnGetList();
     }, []);
 
     return (
         <div className="mypage-container">
-            <h2 className="page-title">
-                🔔 알림
-            </h2>
+            <h2 className="page-title">🔔 알림</h2>
 
             <div className="mypage-card">
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: "15px"
-                    }}
-                >
-                    <h3 className="section-title">
-                        내 알림 목록
-                    </h3>
-
-                    <button
-                        className="update-btn"
-                        onClick={fnReadAll}
-                    >
-                        모두 읽음
-                    </button>
-                </div>
-
-                {notiList.length === 0 ? (
+                {list.length === 0 ? (
                     <div
                         style={{
                             padding: "20px",
@@ -108,90 +96,53 @@ function Notification() {
                         알림이 없습니다.
                     </div>
                 ) : (
-                    <div>
-                        {notiList.map(item => (
+                    list.map(item => (
+                        <div
+                            key={item.NOTI_ID}
+                            onClick={() => fnMoveNotification(item)}
+                            style={{
+                                padding: "15px",
+                                marginBottom: "10px",
+                                borderRadius: "10px",
+                                background:
+                                    item.IS_READ === "Y"
+                                        ? "#f1f1f1"
+                                        : "#e3f2fd",
+                                border: "1px solid #ddd",
+                                cursor: "pointer"
+                            }}
+                        >
                             <div
-                                key={item.NOTI_ID}
                                 style={{
-                                    padding: "15px",
-                                    marginBottom: "10px",
-                                    borderRadius: "12px",
-                                    background:
-                                        item.IS_READ === "N"
-                                            ? "#eaf4ff"
-                                            : "#f5f5f5",
-                                    border:
-                                        item.IS_READ === "N"
-                                            ? "1px solid #90caf9"
-                                            : "1px solid #ddd"
+                                    fontWeight: "bold",
+                                    marginBottom: "6px"
                                 }}
                             >
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center"
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            fontWeight: "bold",
-                                            fontSize: "16px"
-                                        }}
-                                    >
-                                        {getTypeIcon(item.NOTI_TYPE)}{" "}
-                                        {item.MESSAGE}
-                                    </div>
-
-                                    <span
-                                        style={{
-                                            fontSize: "12px",
-                                            color: "#777"
-                                        }}
-                                    >
-                                        {item.CDATETIME}
-                                    </span>
-                                </div>
-
-                                <div
-                                    style={{
-                                        marginTop: "10px",
-                                        display: "flex",
-                                        gap: "10px"
-                                    }}
-                                >
-                                    {(item.NOTI_TYPE === "COMMENT" ||
-                                        item.NOTI_TYPE === "LIKE" ||
-                                        item.NOTI_TYPE === "REPLY") && (
-                                        <Link
-                                            to={"/post/" + item.REF_ID}
-                                            onClick={() =>
-                                                fnReadNotification(item.NOTI_ID)
-                                            }
-                                            style={{
-                                                color: "#1976d2",
-                                                fontWeight: "bold",
-                                                textDecoration: "none"
-                                            }}
-                                        >
-                                            게시글 보러가기
-                                        </Link>
-                                    )}
-
-                                    {item.IS_READ === "N" && (
-                                        <button
-                                            className="list-btn"
-                                            onClick={() =>
-                                                fnReadNotification(item.NOTI_ID)
-                                            }
-                                        >
-                                            읽음 처리
-                                        </button>
-                                    )}
-                                </div>
+                                {getNotificationText(item)}
                             </div>
-                        ))}
-                    </div>
+
+                            <div
+                                style={{
+                                    fontSize: "13px",
+                                    color: "#777"
+                                }}
+                            >
+                                {item.CDATETIME}
+                            </div>
+
+                            {item.IS_READ === "N" && (
+                                <div
+                                    style={{
+                                        marginTop: "8px",
+                                        fontSize: "12px",
+                                        color: "#1976d2"
+                                    }}
+                                >
+                                    클릭하면 읽음 처리됩니다.
+                                </div>
+                            )}
+                        </div>
+                    ))
                 )}
             </div>
         </div>

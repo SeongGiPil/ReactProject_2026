@@ -41,10 +41,12 @@ router.get("/following/list", jwtAuthentication, async (req, res) => {
 
     } catch (err) {
         console.log("팔로잉 목록 조회 에러 :", err);
+
         res.status(500).json({
             success: false,
             message: err.message
         });
+
     } finally {
         if (conn) await conn.close();
     }
@@ -86,10 +88,12 @@ router.get("/follower/list", jwtAuthentication, async (req, res) => {
 
     } catch (err) {
         console.log("팔로워 목록 조회 에러 :", err);
+
         res.status(500).json({
             success: false,
             message: err.message
         });
+
     } finally {
         if (conn) await conn.close();
     }
@@ -138,7 +142,8 @@ router.get("/:targetUserId", jwtAuthentication, async (req, res) => {
         res.json({
             success: true,
             info: {
-                isFollowing: result.rows[0].IS_FOLLOWING > 0 ? "Y" : "N",
+                isFollowing:
+                    result.rows[0].IS_FOLLOWING > 0 ? "Y" : "N",
                 followerCnt: result.rows[0].FOLLOWER_CNT,
                 followingCnt: result.rows[0].FOLLOWING_CNT
             }
@@ -146,10 +151,12 @@ router.get("/:targetUserId", jwtAuthentication, async (req, res) => {
 
     } catch (err) {
         console.log("팔로우 상태 조회 에러 :", err);
+
         res.status(500).json({
             success: false,
             message: err.message
         });
+
     } finally {
         if (conn) await conn.close();
     }
@@ -186,6 +193,7 @@ router.post("/:targetUserId", jwtAuthentication, async (req, res) => {
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
+        // 이미 팔로우 중이면 언팔로우
         if (check.rows.length > 0) {
             await conn.execute(
                 `
@@ -205,6 +213,7 @@ router.post("/:targetUserId", jwtAuthentication, async (req, res) => {
             });
         }
 
+        // 팔로우 등록
         await conn.execute(
             `
             INSERT INTO USER_FOLLOW (
@@ -221,6 +230,31 @@ router.post("/:targetUserId", jwtAuthentication, async (req, res) => {
             )
             `,
             { loginUserId, targetUserId }
+        );
+
+        // 팔로우 알림 등록
+        await conn.execute(
+            `
+            INSERT INTO NOTIFICATION (
+                NOTI_ID,
+                USER_ID,
+                NOTI_TYPE,
+                REF_ID,
+                IS_READ,
+                CDATETIME
+            )
+            VALUES (
+                SEQ_NOTIFICATION.NEXTVAL,
+                :targetUserId,
+                'FOLLOW',
+                NULL,
+                'N',
+                SYSDATE
+            )
+            `,
+            {
+                targetUserId
+            }
         );
 
         await conn.commit();
@@ -240,6 +274,7 @@ router.post("/:targetUserId", jwtAuthentication, async (req, res) => {
             success: false,
             message: err.message
         });
+
     } finally {
         if (conn) await conn.close();
     }
