@@ -22,7 +22,7 @@ SpoTalk에서 응원팀을 선택하고, 게시글과 댓글, 좋아요, 팔로�
 
 ## 기술 스택
 ## Front-End
--React 18
+![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
 -React Router v6
 -Material UI (MUI)
 -JWT Decode
