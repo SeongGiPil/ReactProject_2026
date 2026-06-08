@@ -20,14 +20,13 @@ SpoTalk에서 응원팀을 선택하고, 게시글과 댓글, 좋아요, 팔로�
 -일반 SNS는 프로야구  팬들을 위한 기능이 부족하여 불편하였습니다. 그러한 불편함을 해소하고자
 프로야구 팬 커뮤니티 게시판을 만들게되었습니다
 
-
-🛠 기술 스택
+## 기술 스택
 ## Front-End
 -React 18
 -React Router v6
 -Material UI (MUI)
 -JWT Decode
-## Back-End
+-Back-End
 Node.js
 Express
 JWT
@@ -35,6 +34,6 @@ bcrypt
 Multer
 Database
 Oracle Database
-## Version Control
+Version Control
 Git
 GitHub
