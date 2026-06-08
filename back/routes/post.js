@@ -4,15 +4,9 @@ const multer = require("multer");
 const path = require("path");
 const db = require("../db");
 
-// JWT 인증 미들웨어
 const { jwtAuthentication } = require("../auth");
 
 const router = express.Router();
-
-
-// =========================
-// multer 이미지 업로드 설정
-// =========================
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -21,21 +15,11 @@ const storage = multer.diskStorage({
 
     filename: function (req, file, cb) {
         const ext = path.extname(file.originalname);
-
-        cb(
-            null,
-            Date.now() + "_" + Math.round(Math.random() * 1000000) + ext
-        );
+        cb(null, Date.now() + "_" + Math.round(Math.random() * 1000000) + ext);
     }
 });
 
 const upload = multer({ storage });
-
-
-// =========================
-// 게시글 등록 + 이미지 업로드
-// POST /post/add
-// =========================
 
 router.post("/add", upload.array("images", 5), async (req, res) => {
     const { userId, title, content, postType, teamId } = req.body;
@@ -51,9 +35,7 @@ router.post("/add", upload.array("images", 5), async (req, res) => {
             FROM DUAL
             `,
             {},
-            {
-                outFormat: oracledb.OUT_FORMAT_OBJECT
-            }
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
         const postId = seqResult.rows[0].POST_ID;
@@ -140,13 +122,6 @@ router.post("/add", upload.array("images", 5), async (req, res) => {
     }
 });
 
-
-// =========================
-// 통합 게시글 목록 조회
-// GET /post/list
-// 작성자 팬등급 계산용 통계 + 댓글 수 포함
-// =========================
-
 router.get("/list", async (req, res) => {
     let conn;
 
@@ -211,12 +186,11 @@ router.get("/list", async (req, res) => {
                 ON P.POST_ID = I.POST_ID
                 AND I.IS_MAIN = 'Y'
             WHERE P.POST_STATUS = 'NORMAL'
+            AND P.TEAM_ID IS NULL
             ORDER BY P.POST_ID DESC
             `,
             {},
-            {
-                outFormat: oracledb.OUT_FORMAT_OBJECT
-            }
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
         res.json({
@@ -236,13 +210,6 @@ router.get("/list", async (req, res) => {
         if (conn) await conn.close();
     }
 });
-
-
-// =========================
-// 팀 게시글 목록 조회
-// GET /post/team/:teamId
-// 작성자 팬등급 계산용 통계 + 댓글 수 포함
-// =========================
 
 router.get("/team/:teamId", async (req, res) => {
     const { teamId } = req.params;
@@ -313,12 +280,8 @@ router.get("/team/:teamId", async (req, res) => {
             AND P.TEAM_ID = :teamId
             ORDER BY P.POST_ID DESC
             `,
-            {
-                teamId: Number(teamId)
-            },
-            {
-                outFormat: oracledb.OUT_FORMAT_OBJECT
-            }
+            { teamId: Number(teamId) },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
         res.json({
@@ -338,13 +301,6 @@ router.get("/team/:teamId", async (req, res) => {
         if (conn) await conn.close();
     }
 });
-
-
-// =========================
-// 게시글 상세 조회
-// GET /post/view/:postId
-// 작성자 팬등급 계산용 통계 포함
-// =========================
 
 router.get("/view/:postId", async (req, res) => {
     const { postId } = req.params;
@@ -413,9 +369,7 @@ router.get("/view/:postId", async (req, res) => {
             AND P.POST_STATUS = 'NORMAL'
             `,
             { postId },
-            {
-                outFormat: oracledb.OUT_FORMAT_OBJECT
-            }
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
         const imgResult = await conn.execute(
@@ -430,9 +384,7 @@ router.get("/view/:postId", async (req, res) => {
             ORDER BY IMG_ID
             `,
             { postId },
-            {
-                outFormat: oracledb.OUT_FORMAT_OBJECT
-            }
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
         await conn.commit();
@@ -464,14 +416,6 @@ router.get("/view/:postId", async (req, res) => {
         if (conn) await conn.close();
     }
 });
-
-
-// =========================
-// 게시글 수정
-// PUT /post/update/:postId
-// JWT 필요
-// 작성자 본인만 수정 가능
-// =========================
 
 router.put("/update/:postId", jwtAuthentication, async (req, res) => {
     const { postId } = req.params;
@@ -530,14 +474,6 @@ router.put("/update/:postId", jwtAuthentication, async (req, res) => {
     }
 });
 
-
-// =========================
-// 게시글 삭제
-// DELETE /post/delete/:postId
-// JWT 필요
-// 작성자 본인만 삭제 가능
-// =========================
-
 router.delete("/delete/:postId", jwtAuthentication, async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.userId;
@@ -555,10 +491,7 @@ router.delete("/delete/:postId", jwtAuthentication, async (req, res) => {
             AND USER_ID = :userId
             AND POST_STATUS = 'NORMAL'
             `,
-            {
-                postId,
-                userId
-            }
+            { postId, userId }
         );
 
         await conn.commit();
@@ -584,12 +517,6 @@ router.delete("/delete/:postId", jwtAuthentication, async (req, res) => {
         if (conn) await conn.close();
     }
 });
-
-
-// =========================
-// 내 게시글 목록 조회
-// GET /post/my/:userId
-// =========================
 
 router.get("/my/:userId", async (req, res) => {
     const { userId } = req.params;
@@ -623,9 +550,7 @@ router.get("/my/:userId", async (req, res) => {
             ORDER BY POST_ID DESC
             `,
             { userId },
-            {
-                outFormat: oracledb.OUT_FORMAT_OBJECT
-            }
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
         res.json({
@@ -645,11 +570,6 @@ router.get("/my/:userId", async (req, res) => {
         if (conn) await conn.close();
     }
 });
-
-// =========================
-// 인기글 TOP5
-// GET /post/popular
-// =========================
 
 router.get("/popular", async (req, res) => {
     let conn;
@@ -676,9 +596,7 @@ router.get("/popular", async (req, res) => {
             WHERE ROWNUM <= 5
             `,
             {},
-            {
-                outFormat: oracledb.OUT_FORMAT_OBJECT
-            }
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
         res.json({
@@ -698,10 +616,6 @@ router.get("/popular", async (req, res) => {
         if (conn) await conn.close();
     }
 });
-// =========================
-// 팀 게시글 개수 TOP3
-// GET /post/team-rank
-// =========================
 
 router.get("/team-rank", async (req, res) => {
     let conn;
@@ -728,9 +642,7 @@ router.get("/team-rank", async (req, res) => {
             WHERE ROWNUM <= 3
             `,
             {},
-            {
-                outFormat: oracledb.OUT_FORMAT_OBJECT
-            }
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
         res.json({

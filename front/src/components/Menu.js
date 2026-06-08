@@ -42,6 +42,8 @@ function Menu() {
             loginUser = jwtDecode(token);
         } catch (err) {
             console.log("토큰 디코드 실패", err);
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
         }
     }
 
@@ -59,15 +61,31 @@ function Menu() {
     ];
 
     function fnGetNotiCount() {
-        if (!token) return;
+        const currentToken = localStorage.getItem("token");
+
+        if (!currentToken) {
+            setNotiCount(0);
+            return;
+        }
 
         fetch("http://localhost:3010/notification/count", {
             headers: {
-                Authorization: "Bearer " + token
+                Authorization: "Bearer " + currentToken
             }
         })
-            .then(res => res.json())
+            .then(res => {
+                if (res.status === 401 || res.status === 403) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user");
+                    setNotiCount(0);
+                    return null;
+                }
+
+                return res.json();
+            })
             .then(data => {
+                if (!data) return;
+
                 if (data.success) {
                     setNotiCount(data.count || 0);
                 }
@@ -167,7 +185,13 @@ function Menu() {
 
                         <ListItemText
                             primary={
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center"
+                                    }}
+                                >
                                     <span>알림</span>
 
                                     {notiCount > 0 && (
@@ -191,20 +215,11 @@ function Menu() {
                 </ListItem>
 
                 <ListItem disablePadding>
-                    <ListItemButton
-                        component={Link}
-                        to="/ranking"
-                        sx={menuStyle}
-                    >
-                        <ListItemIcon sx={iconStyle}>
-                            🏆
-                        </ListItemIcon>
-
+                    <ListItemButton component={Link} to="/ranking" sx={menuStyle}>
+                        <ListItemIcon sx={iconStyle}>🏆</ListItemIcon>
                         <ListItemText primary="팬랭킹" />
                     </ListItemButton>
                 </ListItem>
-
-
 
                 {loginUser?.role !== "ADMIN" && (
                     <>
@@ -227,7 +242,10 @@ function Menu() {
                         </ListItem>
 
                         <ListItem disablePadding>
-                            <ListItemButton onClick={() => setOpenTeamMenu(!openTeamMenu)} sx={menuStyle}>
+                            <ListItemButton
+                                onClick={() => setOpenTeamMenu(!openTeamMenu)}
+                                sx={menuStyle}
+                            >
                                 <ListItemIcon sx={iconStyle}>
                                     <Groups />
                                 </ListItemIcon>
@@ -235,17 +253,18 @@ function Menu() {
                             </ListItemButton>
                         </ListItem>
 
-                        {openTeamMenu && teams.map(team => (
-                            <ListItem key={team.id} disablePadding>
-                                <ListItemButton
-                                    component={Link}
-                                    to={"/team/" + team.id}
-                                    sx={{ ...menuStyle, pl: 6, fontSize: "13px" }}
-                                >
-                                    <ListItemText primary={team.name} />
-                                </ListItemButton>
-                            </ListItem>
-                        ))}
+                        {openTeamMenu &&
+                            teams.map(team => (
+                                <ListItem key={team.id} disablePadding>
+                                    <ListItemButton
+                                        component={Link}
+                                        to={"/team/" + team.id}
+                                        sx={{ ...menuStyle, pl: 6, fontSize: "13px" }}
+                                    >
+                                        <ListItemText primary={team.name} />
+                                    </ListItemButton>
+                                </ListItem>
+                            ))}
 
                         <ListItem disablePadding>
                             <ListItemButton component={Link} to="/mypage" sx={menuStyle}>

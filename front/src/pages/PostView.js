@@ -359,8 +359,7 @@ function PostView() {
 
             <div className="post-info-row">
                 <span>작성자 : {post.USER_ID}</span>
-
-                {post.USER_ID && (
+                {post.USER_ID && currentUser?.userId !== post.USER_ID && (
                     <button
                         className="list-btn"
                         onClick={() => navigate("/user/" + post.USER_ID)}
@@ -368,7 +367,6 @@ function PostView() {
                         프로필
                     </button>
                 )}
-
                 <span>조회수 : {post.VIEW_CNT}</span>
             </div>
 
@@ -451,16 +449,24 @@ function PostView() {
             )}
 
             <div className="post-action-area">
-                <button
-                    className={isLiked ? "like-btn" : "like-btn unlike"}
-                    onClick={fnToggleLike}
-                >
-                    {isLiked ? "❤️" : "🤍"} 좋아요 {likeCnt}
-                </button>
 
-                <button className="report-btn" onClick={fnReport}>
-                    🚨 신고
-                </button>
+                {currentUser?.userId !== post.USER_ID && (
+                    <>
+                        <button
+                            className={isLiked ? "like-btn" : "like-btn unlike"}
+                            onClick={fnToggleLike}
+                        >
+                            {isLiked ? "❤️" : "🤍"} 좋아요 {likeCnt}
+                        </button>
+
+                        <button
+                            className="report-btn"
+                            onClick={fnReport}
+                        >
+                            🚨 신고
+                        </button>
+                    </>
+                )}
 
                 {currentUser?.userId === post.USER_ID && (
                     <>
@@ -477,15 +483,22 @@ function PostView() {
                             </button>
                         )}
 
-                        <button className="delete-btn" onClick={fnDelete}>
+                        <button
+                            className="delete-btn"
+                            onClick={fnDelete}
+                        >
                             삭제
                         </button>
                     </>
                 )}
 
-                <button className="list-btn" onClick={() => navigate("/feed")}>
+                <button
+                    className="list-btn"
+                    onClick={() => navigate("/feed")}
+                >
                     목록으로
                 </button>
+
             </div>
 
             <hr />

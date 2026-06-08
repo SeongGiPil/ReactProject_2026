@@ -82,7 +82,7 @@ router.post("/login", async (req, res) => {
             },
             process.env.jwt_key,
             {
-                expiresIn: "1h"
+                expiresIn: "24h"
             }
         );
 

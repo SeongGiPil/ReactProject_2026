@@ -255,17 +255,7 @@ function Write() {
                     }}
                 />
 
-                {/* 현재 글자수 표시 */}
-                <div
-                    style={{
-                        textAlign: "right",
-                        fontSize: "12px",
-                        color: content.length >= 180 ? "red" : "#666",
-                        marginTop: "5px"
-                    }}
-                >
-                    {content.length} / 200자
-                </div>
+             
             </div>
 
             {/* 이미지 첨부 */}
