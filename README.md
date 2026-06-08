@@ -1,5 +1,5 @@
 # ⚾ SpoTalk SNS
-![로그인](images/login.jpg)
+![로그인](image/login.jpg)
 
 
 야구 팬들의 일상을 기록하고 공유하는 스포츠 팬 커뮤니티 SNS
