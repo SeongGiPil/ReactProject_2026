@@ -25,7 +25,7 @@ SpoTalk에서 응원팀을 선택하고, 게시글과 댓글, 좋아요, 팔로�
 
 | 구분              | 기술                                               |
 | --------------- | ------------------------------------------------ |
-| Front-End       | React, JavaScript, HTML5, CSS3, Material UI(MUI) |
+| Front-End       | <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" width="50" />, JavaScript, HTML5, CSS3, Material UI(MUI) |
 | Back-End        | Node.js, Express                                 |
 | Database        | Oracle Database                                  |
 | Version Control | Git, GitHub                                      |
