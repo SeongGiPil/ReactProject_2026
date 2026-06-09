@@ -121,3 +121,45 @@ SpoTalk
 │   └── package.json
 │
 └── README.md
+
+---
+
+## 추후 보완사항
+
+- 소셜 로그인 기능 추가
+- 배너 광고 기능 추가
+- 팔로워 간 채팅 기능 추가
+- 실시간 알림 기능 고도화
+- 모바일 반응형 UI 개선
+
+---
+
+## 개발 후기
+
+일반 SNS 기능에는 프로야구 팬들을 위한 기능이 많지 않아 프로야구 팬으로서 아쉬움이 있었습니다.  
+이번 프로젝트를 직접 구현하면서 부족한 점도 많이 느꼈고, 다양한 문제를 해결해 나가며 한 단계 성장할 수 있었습니다.  
+앞으로도 포기하지 않고 어려움을 해결하며 꾸준히 성장하는 개발자가 되고 싶습니다.
+
+---
+
+## 기타 산출물
+
+### 설계 자료
+
+https://drive.google.com/drive/folders/1833zHtJrhzaA-_t1xvrsyr05f6pQd2f-
+
+### ERD 자료
+
+https://drive.google.com/drive/folders/19r_hmycvKkgHvB84-Rd3IK5XLjVROeA2
+
+### 시연영상
+
+https://drive.google.com/drive/folders/1kXiRPLbECVVQunF_no-tjMvZsYWutml1
+
+---
+
+## 개발자 정보
+
+- 이름: 성기필
+- GitHub: https://github.com/SeongGiPil
+- E-mail: [rlvf1234@naver.com](mailto:rlvf1234@naver.com)
