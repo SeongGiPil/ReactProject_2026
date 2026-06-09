@@ -106,11 +106,20 @@ SpoTalk
 ## 개발후기
 일반 sns기능에 프로야구 팬들을 위한 기능이 많지는 않아 프로야구 팬으로서 안타까운점이 있었는데 이렇게 직접 구현을 해보니 부족한점도 많이 느꼈고 다양한 문제를 해결해 나감으로써 한단계 성장해 나가지않았나 생각한다.포기하지않고 어려움을 해결하고 지속적으로 도전하며 꾸준히 성장하는 개발자가 되고싶다
 
-## 기타산출물 링크
-설계자료: https://drive.google.com/drive/folders/1833zHtJrhzaA-_t1xvrsyr05f6pQd2f-
-erd : https://drive.google.com/drive/folders/19r_hmycvKkgHvB84-Rd3IK5XLjVROeA2
+##  기타 산출물
+
+* 설계 자료
+
+  * https://drive.google.com/drive/folders/1833zHtJrhzaA-_t1xvrsyr05f6pQd2f-
+
+* ERD 자료
+
+  * https://drive.google.com/drive/folders/19r_hmycvKkgHvB84-Rd3IK5XLjVROeA2
+
+---
 
 ## 개발자 정보
-  성기필
--git:rlvf1234@naver.com
--E-mail:rlvf1234@naver.com
+
+* 이름 : 성기필
+* GitHub : https://github.com/SeongGiPil
+* E-mail : [rlvf1234@naver.com](mailto:rlvf1234@naver.com)
