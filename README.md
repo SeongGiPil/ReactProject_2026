@@ -46,32 +46,50 @@ SpoTalk에서 응원팀을 선택하고, 게시글과 댓글, 좋아요, 팔로�
 ## 6.관리자페이지
 ![게시판](image/관리자페이지.JPG)
 ---
-react-sns-jgh251125/
-├── client/                 # React 프론트엔드
-│   ├── src/
-│   │   ├── components/     # React 컴포넌트
-│   │   │   ├── InstaLogin.js
-│   │   │   ├── InstaJoin.js
-│   │   │   ├── InstaHome.js
-│   │   │   ├── InstaProfile.js
-│   │   │   ├── InstaSearch.js
-│   │   │   ├── InstaExplore.js
-│   │   │   ├── InstaDirect.js
-│   │   │   └── ...
+## 📂 프로젝트 구조
+
+```text
+SpoTalk
+├── react-front
+│   ├── public
+│   ├── src
+│   │   ├── components
+│   │   │   ├── Banner.js
+│   │   │   ├── Main.js
+│   │   │   ├── Menu.js
+│   │   │   └── Sub.js
+│   │   ├── pages
+│   │   │   ├── Login.js
+│   │   │   ├── Join.js
+│   │   │   ├── Feed.js
+│   │   │   ├── PostView.js
+│   │   │   ├── Write.js
+│   │   │   ├── MyPage.js
+│   │   │   ├── Notification.js
+│   │   │   ├── FollowList.js
+│   │   │   ├── TeamBoard.js
+│   │   │   ├── AdminReport.js
+│   │   │   └── AdminPost.js
 │   │   ├── App.js
 │   │   └── index.js
 │   └── package.json
 │
-├── server/                 # Express 백엔드
-│   ├── routes/            # API 라우트
-│   │   ├── insta_user.js
-│   │   ├── insta_home.js
-│   │   ├── insta_feed.js
-│   │   ├── insta_comment.js
-│   │   └── insta_message.js
-│   ├── server.js
-│   ├── auth.js            # JWT 인증 미들웨어
-│   ├── db.js              # 데이터베이스 연결
-│   └── uploads/           # 업로드된 파일 저장소
+├── express-back
+│   ├── routes
+│   │   ├── user.js
+│   │   ├── post.js
+│   │   ├── comment.js
+│   │   ├── like.js
+│   │   ├── follow.js
+│   │   ├── notification.js
+│   │   ├── report.js
+│   │   └── banner.js
+│   ├── uploads
+│   ├── auth.js
+│   ├── db.js
+│   ├── app.js
+│   └── package.json
 │
 └── README.md
+```
+
