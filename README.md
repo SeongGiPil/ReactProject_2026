@@ -111,6 +111,6 @@ SpoTalk
 erd : https://drive.google.com/drive/folders/19r_hmycvKkgHvB84-Rd3IK5XLjVROeA2
 
 ## 개발자 정보
-성기필
-git:rlvf1234@naver.com
-E-mail:rlvf1234@naver.com
+  성기필
+-git:rlvf1234@naver.com
+-E-mail:rlvf1234@naver.com
