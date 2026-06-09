@@ -119,6 +119,11 @@ SpoTalk
 
   * https://drive.google.com/drive/folders/19r_hmycvKkgHvB84-Rd3IK5XLjVROeA2
 
+* 시연영상
+
+  * https://drive.google.com/drive/folders/1kXiRPLbECVVQunF_no-tjMvZsYWutml1
+
+
 ---
 
 ## 개발자 정보
