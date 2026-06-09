@@ -146,20 +146,20 @@ SpoTalk
 앞으로도 포기하지 않고 어려움을 해결하며 꾸준히 성장하는 개발자가 되고 싶습니다.
 
 ---
-
 ## 기타 산출물
 
 ### 설계 자료
 
-https://drive.google.com/drive/folders/1833zHtJrhzaA-_t1xvrsyr05f6pQd2f-
+[설계 자료 보기](https://drive.google.com/drive/folders/1833zHtJrhzaA-_t1xvrsyr05f6pQd2f-)
 
 ### ERD 자료
 
-https://drive.google.com/drive/folders/19r_hmycvKkgHvB84-Rd3IK5XLjVROeA2
+[ERD 자료 보기](https://drive.google.com/drive/folders/19r_hmycvKkgHvB84-Rd3IK5XLjVROeA2)
 
 ### 시연영상
 
-https://drive.google.com/drive/folders/1kXiRPLbECVVQunF_no-tjMvZsYWutml1
+[시연영상 보기](https://drive.google.com/drive/folders/1kXiRPLbECVVQunF_no-tjMvZsYWutml1)
+
 
 ---
 
