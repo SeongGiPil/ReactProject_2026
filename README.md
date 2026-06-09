@@ -109,3 +109,8 @@ SpoTalk
 ## 기타산출물 링크
 설계자료: https://drive.google.com/drive/folders/1833zHtJrhzaA-_t1xvrsyr05f6pQd2f-
 erd : https://drive.google.com/drive/folders/19r_hmycvKkgHvB84-Rd3IK5XLjVROeA2
+
+## 개발자 정보
+성기필
+git:rlvf1234@naver.com
+E-mail:rlvf1234@naver.com
