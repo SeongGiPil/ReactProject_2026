@@ -45,4 +45,51 @@ SpoTalk에서 응원팀을 선택하고, 게시글과 댓글, 좋아요, 팔로�
 ![마이페이지](image/mypage.JPG)
 ## 6.관리자페이지
 ![게시판](image/관리자페이지.JPG)
+---
+##  프로젝트 구조
+
+SpoTalk
+├── react-front
+│   ├── public
+│   ├── src
+│   │   ├── components
+│   │   │   ├── Banner.js
+│   │   │   ├── Main.js
+│   │   │   ├── Menu.js
+│   │   │   └── Sub.js
+│   │   ├── pages
+│   │   │   ├── Login.js
+│   │   │   ├── Join.js
+│   │   │   ├── Feed.js
+│   │   │   ├── PostView.js
+│   │   │   ├── Write.js
+│   │   │   ├── MyPage.js
+│   │   │   ├── Notification.js
+│   │   │   ├── FollowList.js
+│   │   │   ├── TeamBoard.js
+│   │   │   ├── AdminReport.js
+│   │   │   └── AdminPost.js
+│   │   ├── App.js
+│   │   └── index.js
+│   └── package.json
+│
+├── express-back
+│   ├── routes
+│   │   ├── user.js
+│   │   ├── post.js
+│   │   ├── comment.js
+│   │   ├── like.js
+│   │   ├── follow.js
+│   │   ├── notification.js
+│   │   ├── report.js
+│   │   └── banner.js
+│   ├── uploads
+│   ├── auth.js
+│   ├── db.js
+│   ├── app.js
+│   └── package.json
+│
+└── README.md
+```
+
 
