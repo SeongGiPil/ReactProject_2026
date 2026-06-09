@@ -21,20 +21,11 @@ SpoTalk에서 응원팀을 선택하고, 게시글과 댓글, 좋아요, 팔로�
 프로야구 팬 커뮤니티 게시판을 만들게되었습니다
 
 ## 기술 스택
-## Front-End
-![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
-![React Router v6](https://img.shields.io/badge/React_Router-v6-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white)
-![MUI](https://img.shields.io/badge/MUI-007FFF?style=for-the-badge&logo=mui&logoColor=white)
-![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
+## 🛠 Tech Stack
 
-## Back-End
-Node.js
-Express
-JWT
-bcrypt
-Multer
-Database
-Oracle Database
-Version Control
-Git
-GitHub
+| 구분              | 기술                                               |
+| --------------- | ------------------------------------------------ |
+| Front-End       | React, JavaScript, HTML5, CSS3, Material UI(MUI) |
+| Back-End        | Node.js, Express                                 |
+| Database        | Oracle Database                                  |
+| Version Control | Git, GitHub                                      |
