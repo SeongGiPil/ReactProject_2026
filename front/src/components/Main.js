@@ -7,7 +7,6 @@ function Main() {
     const [popularPostList, setPopularPostList] = useState([]);
     const [popularTeamList, setPopularTeamList] = useState([]);
     const [bannerIndex, setBannerIndex] = useState(0);
-    const [dbBannerList, setDbBannerList] = useState([]);
 
     const teams = [
         { id: 1, name: "LG", icon: "⚡" },
@@ -22,7 +21,7 @@ function Main() {
         { id: 10, name: "키움", icon: "🦸" }
     ];
 
-    const defaultBanners = [
+    const banners = [
         {
             title: "🎁 SpoTalk 응원 이벤트",
             text: "게시글 작성하고 좋아요 받으면 인기팬 TOP10 선정!",
@@ -43,34 +42,12 @@ function Main() {
         }
     ];
 
-    const banners =
-        dbBannerList.length > 0
-            ? dbBannerList.map(item => ({
-                title: "📢 SpoTalk 배너 광고",
-                text: item.ORIGIN_NAME || item.FILE_NAME,
-                button: "자세히 보기",
-                link: "/feed",
-                image: "http://localhost:3010" + item.FILE_PATH
-            }))
-            : defaultBanners;
-
     function getTeamInfo(teamId) {
         return teams.find(team => team.id === Number(teamId)) || {
             id: 0,
             name: "통합",
             icon: "⚾"
         };
-    }
-
-    function fnGetBanner() {
-        fetch("http://localhost:3010/banner")
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    setDbBannerList(data.list || []);
-                }
-            })
-            .catch(err => console.log(err));
     }
 
     function fnGetMainData() {
@@ -109,7 +86,6 @@ function Main() {
     useEffect(() => {
         fnGetMainData();
         fnGetTeamRank();
-        fnGetBanner();
     }, []);
 
     useEffect(() => {
@@ -122,7 +98,7 @@ function Main() {
         return () => clearInterval(timer);
     }, [banners.length]);
 
-    const currentBanner = banners[bannerIndex] || defaultBanners[0];
+    const currentBanner = banners[bannerIndex];
 
     return (
         <div style={pageStyle}>
@@ -146,14 +122,7 @@ function Main() {
                 </div>
             </div>
 
-            <div
-                style={{
-                    ...bannerStyle,
-                    background: currentBanner.image
-                        ? `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url(${currentBanner.image}) center/cover`
-                        : "linear-gradient(90deg,#4A8CFF,#79B8FF)"
-                }}
-            >
+            <div style={bannerStyle}>
                 <div>
                     <h2 style={{ margin: 0 }}>
                         {currentBanner.title}
@@ -372,7 +341,8 @@ const bannerStyle = {
     alignItems: "center",
     boxShadow: "0 10px 25px rgba(74,140,255,0.25)",
     position: "relative",
-    zIndex: 1
+    zIndex: 1,
+    background: "linear-gradient(90deg,#4A8CFF,#79B8FF)"
 };
 
 const bannerBtnStyle = {

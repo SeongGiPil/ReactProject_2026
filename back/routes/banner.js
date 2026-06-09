@@ -4,12 +4,6 @@ const db = require("../db");
 
 const router = express.Router();
 
-
-// =========================
-// 메인 배너 조회
-// GET /banner
-// =========================
-
 router.get("/", async (req, res) => {
     let conn;
 
@@ -25,16 +19,13 @@ router.get("/", async (req, res) => {
                 ORIGIN_NAME,
                 FILE_EXT,
                 IS_MAIN_BANNER,
-                TO_CHAR(CDATETIME,'YYYY-MM-DD HH24:MI')
-                    AS CDATETIME
+                TO_CHAR(CDATETIME,'YYYY-MM-DD HH24:MI') AS CDATETIME
             FROM BANNER_FILE
             WHERE IS_MAIN_BANNER = 'Y'
             ORDER BY FILE_NO DESC
             `,
             {},
-            {
-                outFormat: oracledb.OUT_FORMAT_OBJECT
-            }
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
         res.json({
@@ -43,7 +34,6 @@ router.get("/", async (req, res) => {
         });
 
     } catch (err) {
-
         console.log("배너 조회 에러 :", err);
 
         res.status(500).json({
@@ -52,11 +42,9 @@ router.get("/", async (req, res) => {
         });
 
     } finally {
-
         if (conn) {
             await conn.close();
         }
-
     }
 });
 
