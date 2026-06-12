@@ -51,7 +51,7 @@ function Main() {
     }
 
     function fnGetMainData() {
-        fetch("http://192.168.30.76:3010/post/popular")
+        fetch("http://localhost:3010/post/popular")
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -62,7 +62,7 @@ function Main() {
     }
 
     function fnGetTeamRank() {
-        fetch("http://192.168.30.76:3010/post/team-rank")
+        fetch("http://localhost:3010/post/team-rank")
             .then(res => res.json())
             .then(data => {
                 if (data.success) {

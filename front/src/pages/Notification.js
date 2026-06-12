@@ -13,7 +13,7 @@ function Notification() {
     }
 
     function fnGetList() {
-        fetch("http://192.168.30.76:3010/notification", {
+        fetch("http://localhost:3010/notification", {
             headers: {
                 Authorization: "Bearer " + localStorage.getItem("token")
             }
@@ -29,7 +29,7 @@ function Notification() {
     }
 
     function fnRead(notiId) {
-        fetch("http://192.168.30.76:3010/notification/read/" + notiId, {
+        fetch("http://localhost:3010/notification/read/" + notiId, {
             method: "PUT",
             headers: {
                 Authorization: "Bearer " + localStorage.getItem("token")

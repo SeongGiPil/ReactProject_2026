@@ -4,7 +4,7 @@ function FanRanking() {
     const [rankingList, setRankingList] = useState([]);
 
     function fnGetRanking() {
-        fetch("http://192.168.30.76:3010/user/ranking/top10")
+        fetch("http://localhost:3010/user/ranking/top10")
             .then(res => res.json())
             .then(data => {
                 console.log("팬랭킹 :", data);
@@ -87,7 +87,7 @@ function FanRanking() {
                                         {item.PROFILE_IMG ? (
                                             <img
                                                 src={
-                                                    "http://192.168.30.76:3010" +
+                                                    "http://localhost:3010" +
                                                     item.PROFILE_IMG
                                                 }
                                                 alt="프로필"
