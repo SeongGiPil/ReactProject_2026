@@ -18,7 +18,7 @@ function UserProfile() {
     const currentUser = token ? jwtDecode(token) : null;
 
     function fnGetUser() {
-        fetch("http://192.168.30.76.3010/user/" + userId)
+        fetch("http://192.168.30.76:3010/user/" + userId)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -29,7 +29,7 @@ function UserProfile() {
     }
 
     function fnGetPostList() {
-        fetch("http://192.168.30.76.3010/post/my/" + userId)
+        fetch("http://192.168.30.76:3010/post/my/" + userId)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -42,7 +42,7 @@ function UserProfile() {
     function fnGetFollowInfo() {
         if (!token) return;
 
-        fetch("http://192.168.30.76.3010/follow/" + userId, {
+        fetch("http://192.168.30.76:3010/follow/" + userId, {
             headers: {
                 Authorization: "Bearer " + token
             }
@@ -63,7 +63,7 @@ function UserProfile() {
             return;
         }
 
-        fetch("http://192.168.30.76.3010/follow/" + userId, {
+        fetch("http://192.168.30.76:3010/follow/" + userId, {
             method: "POST",
             headers: {
                 Authorization: "Bearer " + token
@@ -97,7 +97,7 @@ function UserProfile() {
                 <div className="profile-box">
                     {user.PROFILE_IMG ? (
                         <img
-                            src={"http://192.168.30.76.3010" + user.PROFILE_IMG}
+                            src={"http://192.168.30.76:3010" + user.PROFILE_IMG}
                             alt="프로필"
                             className="profile-img"
                         />

@@ -4,7 +4,7 @@ function AdminUser() {
     const [userList, setUserList] = useState([]);
 
     function fnGetUserList() {
-        fetch("http://192.168.30.76.3010/admin/user/list")
+        fetch("http://192.168.30.76:3010/admin/user/list")
             .then(res => res.json())
             .then(data => {
                 console.log("관리자 회원 목록 :", data);
@@ -29,7 +29,7 @@ function AdminUser() {
             return;
         }
 
-        fetch("http://192.168.30.76.3010/admin/user/" + userId + "/status", {
+        fetch("http://192.168.30.76:3010/admin/user/" + userId + "/status", {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json"
@@ -122,7 +122,7 @@ function AdminUser() {
                                         {item.PROFILE_IMG ? (
                                             <img
                                                 src={
-                                                    "http://192.168.30.76.3010" +
+                                                    "http://192.168.30.76:3010" +
                                                     item.PROFILE_IMG
                                                 }
                                                 alt="프로필"

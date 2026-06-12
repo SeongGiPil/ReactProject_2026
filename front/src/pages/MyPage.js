@@ -139,7 +139,7 @@ function MyPage() {
         const loginUser = getLoginUser();
         if (!loginUser) return;
 
-        fetch("http://192.168.30.76.3010/user/" + loginUser.USER_ID)
+        fetch("http://192.168.30.76:3010/user/" + loginUser.USER_ID)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -160,7 +160,7 @@ function MyPage() {
 
         const decoded = jwtDecode(token);
 
-        fetch("http://192.168.30.76.3010/post/my/" + decoded.userId)
+        fetch("http://192.168.30.76:3010/post/my/" + decoded.userId)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -174,7 +174,7 @@ function MyPage() {
         const loginUser = getLoginUser();
         if (!loginUser) return;
 
-        fetch("http://192.168.30.76.3010/user/my-comments/" + loginUser.USER_ID)
+        fetch("http://192.168.30.76:3010/user/my-comments/" + loginUser.USER_ID)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -188,7 +188,7 @@ function MyPage() {
         const loginUser = getLoginUser();
         if (!loginUser) return;
 
-        fetch("http://192.168.30.76.3010/user/my-likes/" + loginUser.USER_ID)
+        fetch("http://192.168.30.76:3010/user/my-likes/" + loginUser.USER_ID)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -199,7 +199,7 @@ function MyPage() {
     }
 
     function fnGetTeamList() {
-        fetch("http://192.168.30.76.3010/team/list")
+        fetch("http://192.168.30.76:3010/team/list")
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -216,7 +216,7 @@ function MyPage() {
         const loginUser = getLoginUser();
         if (!loginUser) return;
 
-        fetch("http://192.168.30.76.3010/team/my/" + loginUser.USER_ID)
+        fetch("http://192.168.30.76:3010/team/my/" + loginUser.USER_ID)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -231,7 +231,7 @@ function MyPage() {
         const loginUser = getLoginUser();
         if (!loginUser) return;
 
-        fetch("http://192.168.30.76.3010/user/stats/" + loginUser.USER_ID)
+        fetch("http://192.168.30.76:3010/user/stats/" + loginUser.USER_ID)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -245,7 +245,7 @@ function MyPage() {
         const loginUser = getLoginUser();
         if (!loginUser) return;
 
-        fetch("http://192.168.30.76.3010/follow/" + loginUser.USER_ID, {
+        fetch("http://192.168.30.76:3010/follow/" + loginUser.USER_ID, {
             headers: {
                 Authorization: "Bearer " + localStorage.getItem("token")
             }
@@ -260,7 +260,7 @@ function MyPage() {
     }
 
     function fnCheckAttendance() {
-        fetch("http://192.168.30.76.3010/attendance/check", {
+        fetch("http://192.168.30.76:3010/attendance/check", {
             headers: {
                 Authorization: "Bearer " + localStorage.getItem("token")
             }
@@ -275,7 +275,7 @@ function MyPage() {
     }
 
     function fnAttendance() {
-        fetch("http://192.168.30.76.3010/attendance", {
+        fetch("http://192.168.30.76:3010/attendance", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -303,7 +303,7 @@ function MyPage() {
     }
 
     function fnUpdateTeam() {
-        fetch("http://192.168.30.76.3010/team/update-user-team", {
+        fetch("http://192.168.30.76:3010/team/update-user-team", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -328,7 +328,7 @@ function MyPage() {
     }
 
     function fnUpdate() {
-        fetch("http://192.168.30.76.3010/user/update", {
+        fetch("http://192.168.30.76:3010/user/update", {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json"
@@ -367,7 +367,7 @@ function MyPage() {
         formData.append("profileImg", profileFile);
         formData.append("userId", user.USER_ID);
 
-        fetch("http://192.168.30.76.3010/user/profile-img", {
+        fetch("http://192.168.30.76:3010/user/profile-img", {
             method: "POST",
             body: formData
         })
@@ -419,7 +419,7 @@ function MyPage() {
                 <div className="profile-box">
                     {user.PROFILE_IMG ? (
                         <img
-                            src={"http://192.168.30.76.3010" + user.PROFILE_IMG}
+                            src={"http://192.168.30.76:3010" + user.PROFILE_IMG}
                             alt="프로필"
                             className="profile-img"
                         />

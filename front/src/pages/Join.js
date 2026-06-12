@@ -16,7 +16,7 @@ function Join() {
     const [selectedTeams, setSelectedTeams] = useState([]);
 
     function fnGetTeamList() {
-        fetch("http://192.168.30.76.3010/team/list")
+        fetch("http://192.168.30.76:3010/team/list")
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -35,7 +35,7 @@ function Join() {
             return;
         }
 
-        fetch("http://192.168.30.76.3010/user/check/" + userId)
+        fetch("http://192.168.30.76:3010/user/check/" + userId)
             .then(res => res.json())
             .then(data => {
                 if (data.exists) {
@@ -81,7 +81,7 @@ function Join() {
             return;
         }
 
-        fetch("http://192.168.30.76.3010/user/join", {
+        fetch("http://192.168.30.76:3010/user/join", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
