@@ -17,8 +17,12 @@ SpoTalk은 스포츠 팬들이 자유롭게 소통할 수 있는 SNS 플랫폼�
 
 ## 개발 기간
 
-2026.06.01 ~ 2026.06.08  
-개발 및 설계
+| 단계          | 기간                      | 내용                                           |
+| ----------- | ----------------------- | -------------------------------------------- |
+| 설계          | 2026.05.28 ~ 2026.05.29 | 요구사항 분석, 기능 정의, ERD 설계, 화면 설계                |
+| 개발          | 2026.06.01 ~ 2026.06.04 | React 프론트엔드 개발, Express API 개발, Oracle DB 구축 |
+| 테스트 및 오류 수정 | 2026.06.05 ~ 2026.06.08 | 기능 테스트, API 연동 테스트, 버그 수정 및 최적화              |
+| 최종 완료       | 2026.06.08              | 프로젝트 마무리 및 결과물 정리                            |
 
 ---
 
@@ -56,7 +60,7 @@ SpoTalk은 스포츠 팬들이 자유롭게 소통할 수 있는 SNS 플랫폼�
 
 ### 4. 게시글작성
 
-![글쓰기](image/게시글작성.jpg)
+![글쓰기](image/게시글작성.JPG)
 
 ### 5. 게시판
 
@@ -121,7 +125,7 @@ SpoTalk
 │   └── package.json
 │
 └── README.md
-
+```
 
 ---
 
@@ -142,20 +146,20 @@ SpoTalk
 앞으로도 포기하지 않고 어려움을 해결하며 꾸준히 성장하는 개발자가 되고 싶습니다.
 
 ---
-
 ## 기타 산출물
 
 ### 설계 자료
 
-https://drive.google.com/drive/folders/1833zHtJrhzaA-_t1xvrsyr05f6pQd2f-
+[설계 자료 보기](https://drive.google.com/drive/folders/1833zHtJrhzaA-_t1xvrsyr05f6pQd2f-)
 
 ### ERD 자료
 
-https://drive.google.com/drive/folders/19r_hmycvKkgHvB84-Rd3IK5XLjVROeA2
+[ERD 자료 보기](https://drive.google.com/drive/folders/19r_hmycvKkgHvB84-Rd3IK5XLjVROeA2)
 
 ### 시연영상
 
-https://drive.google.com/drive/folders/1kXiRPLbECVVQunF_no-tjMvZsYWutml1
+[시연영상 보기](https://drive.google.com/drive/folders/1kXiRPLbECVVQunF_no-tjMvZsYWutml1)
+
 
 ---
 
