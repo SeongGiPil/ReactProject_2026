@@ -17,7 +17,7 @@ function FindId() {
             return;
         }
 
-        fetch("http://localhost:3010/user/find-id", {
+        fetch("http://192.168.30.76.3010/user/find-id", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

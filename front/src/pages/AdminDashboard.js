@@ -10,7 +10,7 @@ function AdminDashboard() {
     });
 
     function fnGetDashboard() {
-        fetch("http://localhost:3010/admin/dashboard")
+        fetch("http://192.168.30.76.3010/admin/dashboard")
             .then(res => res.json())
             .then(data => {
                 console.log("관리자 대시보드 :", data);

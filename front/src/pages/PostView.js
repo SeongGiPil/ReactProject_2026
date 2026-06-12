@@ -56,7 +56,7 @@ function PostView() {
     }
 
     function fnGetPost() {
-        fetch("http://localhost:3010/post/view/" + postId)
+        fetch("http://192.168.30.76.3010/post/view/" + postId)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -80,7 +80,7 @@ function PostView() {
             return;
         }
 
-        fetch("http://localhost:3010/post/update/" + postId, {
+        fetch("http://192.168.30.76.3010/post/update/" + postId, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -115,7 +115,7 @@ function PostView() {
     function fnDelete() {
         if (!window.confirm("정말 삭제하시겠습니까?")) return;
 
-        fetch("http://localhost:3010/post/delete/" + postId, {
+        fetch("http://192.168.30.76.3010/post/delete/" + postId, {
             method: "DELETE",
             headers: {
                 Authorization: "Bearer " + token
@@ -147,7 +147,7 @@ function PostView() {
 
         if (!reason) return;
 
-        fetch("http://localhost:3010/report", {
+        fetch("http://192.168.30.76.3010/report", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -170,7 +170,7 @@ function PostView() {
     }
 
     function fnGetCommentList() {
-        fetch("http://localhost:3010/comment/" + postId)
+        fetch("http://192.168.30.76.3010/comment/" + postId)
             .then(res => res.json())
             .then(data => {
                 setCommentList(data.list || []);
@@ -184,7 +184,7 @@ function PostView() {
     function fnGetLike() {
         if (!token) return;
 
-        fetch("http://localhost:3010/like/" + postId, {
+        fetch("http://192.168.30.76.3010/like/" + postId, {
             headers: {
                 Authorization: "Bearer " + token
             }
@@ -202,7 +202,7 @@ function PostView() {
     function fnGetFollowInfo() {
         if (!token || !post.USER_ID) return;
 
-        fetch("http://localhost:3010/follow/" + post.USER_ID, {
+        fetch("http://192.168.30.76.3010/follow/" + post.USER_ID, {
             headers: {
                 Authorization: "Bearer " + token
             }
@@ -223,7 +223,7 @@ function PostView() {
             return;
         }
 
-        fetch("http://localhost:3010/follow/" + post.USER_ID, {
+        fetch("http://192.168.30.76.3010/follow/" + post.USER_ID, {
             method: "POST",
             headers: {
                 Authorization: "Bearer " + token
@@ -250,7 +250,7 @@ function PostView() {
             return;
         }
 
-        fetch("http://localhost:3010/like/" + postId, {
+        fetch("http://192.168.30.76.3010/like/" + postId, {
             method: "POST",
             headers: {
                 Authorization: "Bearer " + token
@@ -283,7 +283,7 @@ function PostView() {
             return;
         }
 
-        fetch("http://localhost:3010/comment", {
+        fetch("http://192.168.30.76.3010/comment", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -312,7 +312,7 @@ function PostView() {
     function fnDeleteComment(commentId) {
         if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
 
-        fetch("http://localhost:3010/comment/" + commentId, {
+        fetch("http://192.168.30.76.3010/comment/" + commentId, {
             method: "DELETE",
             headers: {
                 Authorization: "Bearer " + token
@@ -430,7 +430,7 @@ function PostView() {
                     {images.map(img => (
                         <img
                             key={img.IMG_ID}
-                            src={"http://localhost:3010" + img.IMG_PATH}
+                            src={"http://192.168.30.76.3010" + img.IMG_PATH}
                             alt="게시글 이미지"
                             className="post-detail-image"
                         />

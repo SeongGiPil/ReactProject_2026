@@ -46,7 +46,7 @@ function Write() {
 
         const userId = user.USER_ID || user.userId;
 
-        fetch("http://localhost:3010/team/my/" + userId)
+        fetch("http://192.168.30.76.3010/team/my/" + userId)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -135,7 +135,7 @@ function Write() {
             formData.append("images", images[i]);
         }
 
-        fetch("http://localhost:3010/post/add", {
+        fetch("http://192.168.30.76.3010/post/add", {
             method: "POST",
             body: formData
         })

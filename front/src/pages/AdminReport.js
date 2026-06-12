@@ -5,7 +5,7 @@ function AdminReport() {
 
     // 신고 목록 조회
     function fnGetReportList() {
-        fetch("http://localhost:3010/report/list")
+        fetch("http://192.168.30.76.3010/report/list")
             .then(res => res.json())
             .then(data => {
                 console.log("신고 목록 :", data);
@@ -22,7 +22,7 @@ function AdminReport() {
 
     // 신고 상태 처리
     function fnUpdateReport(reportId, status) {
-        fetch("http://localhost:3010/report/" + reportId, {
+        fetch("http://192.168.30.76.3010/report/" + reportId, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json"

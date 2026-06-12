@@ -5,7 +5,7 @@ function AdminPost() {
 
     // 게시글 목록 조회
     function fnGetPostList() {
-        fetch("http://localhost:3010/admin/post/list")
+        fetch("http://192.168.30.76.3010/admin/post/list")
             .then(res => res.json())
             .then(data => {
                 console.log("관리자 게시글 목록 :", data);
@@ -26,7 +26,7 @@ function AdminPost() {
             return;
         }
 
-        fetch("http://localhost:3010/admin/post/" + postId, {
+        fetch("http://192.168.30.76.3010/admin/post/" + postId, {
             method: "DELETE"
         })
             .then(res => res.json())

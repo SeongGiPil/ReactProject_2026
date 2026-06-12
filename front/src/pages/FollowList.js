@@ -11,8 +11,8 @@ function FollowList() {
 
     function fnGetList() {
         const url = isFollowerPage
-            ? "http://localhost:3010/follow/follower/list"
-            : "http://localhost:3010/follow/following/list";
+            ? "http://192.168.30.76.3010/follow/follower/list"
+            : "http://192.168.30.76.3010/follow/following/list";
 
         fetch(url, {
             headers: {
@@ -73,7 +73,7 @@ function FollowList() {
                                         {item.PROFILE_IMG ? (
                                             <img
                                                 src={
-                                                    "http://localhost:3010" +
+                                                    "http://192.168.30.76.3010" +
                                                     item.PROFILE_IMG
                                                 }
                                                 alt="프로필"
