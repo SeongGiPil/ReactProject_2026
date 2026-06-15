@@ -68,7 +68,7 @@ function Menu() {
             return;
         }
 
-        fetch("http://localhost:3010/notification/count", {
+        fetch("http://192.168.30.76:3010/notification/count", {
             headers: {
                 Authorization: "Bearer " + currentToken
             }
@@ -149,7 +149,7 @@ function Menu() {
                 }}
             >
                 <Avatar
-                    src={user?.PROFILE_IMG ? "http://localhost:3010" + user.PROFILE_IMG : ""}
+                    src={user?.PROFILE_IMG ? "http://192.168.30.76:3010" + user.PROFILE_IMG : ""}
                     sx={{ width: 42, height: 42, bgcolor: "#1976d2" }}
                 />
 

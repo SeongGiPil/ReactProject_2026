@@ -80,7 +80,7 @@ async function startServer() {
         app.listen(3010, () => {
             console.log("=================================");
             console.log("SpoTalk Server Start");
-            console.log("http://localhost:3010");
+            console.log("http://192.168.30.76:3010");
             console.log("=================================");
         });
 

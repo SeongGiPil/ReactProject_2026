@@ -1,130 +1,90 @@
 import React, { useEffect, useState } from "react";
+import { Box, Button, Typography, Paper } from "@mui/material";
 
 function Banner() {
+  const banners = [
+    {
+      title: "⚾ KBO 경기 티켓 예매 오픈",
+      desc: "응원팀 경기 일정을 확인하고 바로 예매하세요!",
+      button: "티켓 예매하기",
+      url: "https://www.ticketlink.co.kr"
+    },
+    {
+      title: "🔥 인기 경기 예매 이벤트",
+      desc: "LG vs 두산, KIA vs 롯데 등 인기 경기 티켓 확인!",
+      button: "예매 사이트 이동",
+      url: "https://tickets.interpark.com"
+    },
+    {
+      title: "🎁 야구 팬 특별 프로모션",
+      desc: "SpoTalk에서 경기 정보 확인하고 예매까지 한 번에!",
+      button: "지금 확인하기",
+      url: "https://www.ticketlink.co.kr"
+    }
+  ];
 
-    const bannerList = [
-        {
-            title: "오늘의 인기 게시글",
-            subTitle: "팬들이 가장 많이 본 인기글을 확인해보세요!",
-            icon: "🔥",
-            bg: "linear-gradient(135deg, #ff9800, #f44336)"
-        },
-        {
-            title: "응원팀을 선택해보세요",
-            subTitle: "내 팀을 선택하고 같은 팬들과 소통해보세요!",
-            icon: "⚾",
-            bg: "linear-gradient(135deg, #1976d2, #42a5f5)"
-        },
-        {
-            title: "실시간 팬 인기차트",
-            subTitle: "좋아요와 댓글이 많은 게시글을 만나보세요!",
-            icon: "🏆",
-            bg: "linear-gradient(135deg, #673ab7, #9c27b0)"
-        }
-    ];
+  const [index, setIndex] = useState(0);
 
-    const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % banners.length);
+    }, 3000);
 
-    useEffect(() => {
+    return () => clearInterval(timer);
+  }, []);
 
-        const timer = setInterval(() => {
-            setIndex(prev => (prev + 1) % bannerList.length);
-        }, 3000);
+  const banner = banners[index];
 
-        return () => clearInterval(timer);
+  return (
+    <Paper
+      elevation={3}
+      sx={{
+        width: "100%",
+        height: "220px",
+        borderRadius: "18px",
+        overflow: "hidden",
+        mb: 3,
+        background: "linear-gradient(135deg, #1e3c72, #2a5298)",
+        color: "white",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        px: 5
+      }}
+    >
+      <Box>
+        <Typography variant="h4" fontWeight="bold" gutterBottom>
+          {banner.title}
+        </Typography>
 
-    }, []);
+        <Typography variant="h6" sx={{ mb: 3 }}>
+          {banner.desc}
+        </Typography>
 
-    const item = bannerList[index];
+        <Button
+          variant="contained"
+          color="warning"
+          onClick={() => window.open(banner.url, "_blank")}
+          sx={{
+            fontWeight: "bold",
+            borderRadius: "20px",
+            px: 3
+          }}
+        >
+          {banner.button}
+        </Button>
+      </Box>
 
-    return (
-        <div style={{ width: "100%", marginBottom: "25px" }}>
-
-            <div
-                style={{
-                    height: "190px",
-                    borderRadius: "16px",
-                    padding: "28px",
-                    color: "white",
-                    background: item.bg,
-                    boxSizing: "border-box",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.18)"
-                }}
-            >
-
-                <div>
-
-                    <div
-                        style={{
-                            fontSize: "15px",
-                            marginBottom: "8px",
-                            opacity: 0.9
-                        }}
-                    >
-                        SpoTalk Banner
-                    </div>
-
-                    <h2
-                        style={{
-                            margin: "0 0 10px 0",
-                            fontSize: "28px",
-                            fontWeight: "bold"
-                        }}
-                    >
-                        {item.title}
-                    </h2>
-
-                    <p
-                        style={{
-                            margin: 0,
-                            fontSize: "16px"
-                        }}
-                    >
-                        {item.subTitle}
-                    </p>
-
-                </div>
-
-                <div
-                    style={{
-                        fontSize: "72px"
-                    }}
-                >
-                    {item.icon}
-                </div>
-
-            </div>
-
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: "8px",
-                    marginTop: "10px"
-                }}
-            >
-                {bannerList.map((_, i) => (
-                    <span
-                        key={i}
-                        onClick={() => setIndex(i)}
-                        style={{
-                            width: i === index ? "22px" : "8px",
-                            height: "8px",
-                            borderRadius: "10px",
-                            backgroundColor:
-                                i === index ? "#1976d2" : "#ccc",
-                            cursor: "pointer",
-                            transition: "0.3s"
-                        }}
-                    />
-                ))}
-            </div>
-
-        </div>
-    );
+      <Box
+        sx={{
+          fontSize: "70px",
+          display: { xs: "none", md: "block" }
+        }}
+      >
+        🎟️
+      </Box>
+    </Paper>
+  );
 }
 
 export default Banner;

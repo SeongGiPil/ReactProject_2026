@@ -89,7 +89,7 @@ function TeamBoard() {
 
         const userId = user.USER_ID || user.userId;
 
-        fetch("http://localhost:3010/team/check/" + userId + "/" + teamId)
+        fetch("http://192.168.30.76:3010/team/check/" + userId + "/" + teamId)
             .then(res => res.json())
             .then(data => {
                 if (data.success && data.allowed) {
@@ -110,7 +110,7 @@ function TeamBoard() {
 
     // 팀 게시글 목록 조회
     function fnGetTeamPostList() {
-        fetch("http://localhost:3010/post/team/" + teamId)
+        fetch("http://192.168.30.76:3010/post/team/" + teamId)
             .then(res => res.json())
             .then(data => {
                 console.log("팀 게시글 API 결과:", data);
@@ -213,7 +213,7 @@ function TeamBoard() {
                         {item.MAIN_IMG && (
                             <div style={{ marginBottom: "10px" }}>
                                 <img
-                                    src={"http://localhost:3010" + item.MAIN_IMG}
+                                    src={"http://192.168.30.76:3010" + item.MAIN_IMG}
                                     alt="대표이미지"
                                     style={{
                                         width: "100%",

@@ -26,8 +26,8 @@ function Login() {
         // 로그인 유형에 따라 API 주소 변경
         const url =
             loginType === "admin"
-                ? "http://localhost:3010/admin/login"
-                : "http://localhost:3010/user/login";
+                ? "http://192.168.30.76:3010/admin/login"
+                : "http://192.168.30.76:3010/user/login";
 
         // 로그인 유형에 따라 보내는 데이터 이름 변경
         const body =

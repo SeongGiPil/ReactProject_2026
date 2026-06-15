@@ -17,7 +17,7 @@ function Feed() {
     const pageSize = 5;
 
     function fnGetList() {
-        fetch("http://localhost:3010/post/list")
+        fetch("http://192.168.30.76:3010/post/list")
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -189,7 +189,7 @@ function Feed() {
                         {item.MAIN_IMG && (
                             <div style={{ marginBottom: "10px" }}>
                                 <img
-                                    src={"http://localhost:3010" + item.MAIN_IMG}
+                                    src={"http://192.168.30.76:3010" + item.MAIN_IMG}
                                     alt="대표이미지"
                                     style={{
                                         width: "100%",

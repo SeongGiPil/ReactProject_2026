@@ -20,28 +20,29 @@ function Main() {
         { id: 9, name: "NC", icon: "🦖" },
         { id: 10, name: "키움", icon: "🦸" }
     ];
-
     const banners = [
         {
-            title: "🎁 SpoTalk 응원 이벤트",
-            text: "게시글 작성하고 좋아요 받으면 인기팬 TOP10 선정!",
-            button: "이벤트 참여하기",
-            link: "/feed"
+            title: "🎟️ KBO 티켓 예매 바로가기",
+            text: "두산·키움은 인터파크, 나머지 구단은 티켓링크에서 예매 가능합니다.",
+            button: "티켓 예매하기",
+            link: "https://www.ticketlink.co.kr/sports",
+            external: true
         },
         {
-            title: "⚾ 응원팀 팬 모집중",
-            text: "내 응원팀을 선택하고 팀 게시판에서 팬들과 소통해보세요!",
-            button: "팀 게시판 가기",
-            link: "/team/1"
+            title: "🐻 두산 · 🦸 키움 팬 주목!",
+            text: "두산 베어스와 키움 히어로즈 경기는 인터파크 티켓에서 예매하세요.",
+            button: "인터파크 이동",
+            link: "https://ticket.interpark.com/Contents/Sports/Bridge/baseball",
+            external: true
         },
         {
-            title: "🔥 인기글 챌린지",
-            text: "좋아요를 많이 받은 게시글은 메인 인기글에 노출됩니다!",
-            button: "글쓰기",
-            link: "/write"
+            title: "⚾ SpoTalk X KBO",
+            text: "응원팀 게시판에서 소통하고 경기 티켓까지 한 번에 예매해보세요.",
+            button: "예매 바로가기",
+            link: "https://www.ticketlink.co.kr/sports",
+            external: true
         }
     ];
-
     function getTeamInfo(teamId) {
         return teams.find(team => team.id === Number(teamId)) || {
             id: 0,
@@ -51,7 +52,7 @@ function Main() {
     }
 
     function fnGetMainData() {
-        fetch("http://localhost:3010/post/popular")
+        fetch("http://192.168.30.76:3010/post/popular")
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -62,7 +63,7 @@ function Main() {
     }
 
     function fnGetTeamRank() {
-        fetch("http://localhost:3010/post/team-rank")
+        fetch("http://192.168.30.76:3010/post/team-rank")
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -124,18 +125,25 @@ function Main() {
 
             <div style={bannerStyle}>
                 <div>
-                    <h2 style={{ margin: 0 }}>
-                        {currentBanner.title}
-                    </h2>
+                    <h2 style={{ margin: 0 }}>{currentBanner.title}</h2>
 
                     <p style={{ marginTop: "10px", marginBottom: 0 }}>
                         {currentBanner.text}
                     </p>
                 </div>
 
-                <Link to={currentBanner.link} style={bannerBtnStyle}>
-                    {currentBanner.button} →
-                </Link>
+                {currentBanner.external ? (
+                    <button
+                        onClick={() => window.open(currentBanner.link, "_blank")}
+                        style={bannerBtnStyle}
+                    >
+                        {currentBanner.button} →
+                    </button>
+                ) : (
+                    <Link to={currentBanner.link} style={bannerBtnStyle}>
+                        {currentBanner.button} →
+                    </Link>
+                )}
             </div>
 
             <div style={bannerDotBoxStyle}>
@@ -351,7 +359,10 @@ const bannerBtnStyle = {
     padding: "12px 20px",
     borderRadius: "12px",
     textDecoration: "none",
-    fontWeight: "bold"
+    fontWeight: "bold",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "15px"
 };
 
 const bannerDotBoxStyle = {
