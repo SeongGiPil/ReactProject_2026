@@ -154,7 +154,7 @@ SpoTalk
 
 ### ERD 자료
 
-[ERD 자료 보기](https://drive.google.com/drive/folders/19r_hmycvKkgHvB84-Rd3IK5XLjVROeA2)
+[ERD 자료 보기](https://drive.google.com/file/d/1X3Zc5YiAEXyTeQwJIRsRkTnTk5W8TcQ6/view?usp=sharing)
 
 ### 시연영상
 
