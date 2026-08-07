@@ -150,7 +150,7 @@ SpoTalk
 
 ### 설계 자료
 
-[설계 자료 보기](https://drive.google.com/drive/folders/1833zHtJrhzaA-_t1xvrsyr05f6pQd2f-)
+[설계 자료 보기](https://drive.google.com/drive/folders/1833zHtJrhzaA-_t1xvrsyr05f6pQd2f-?usp=sharing)
 
 ### ERD 자료
 
