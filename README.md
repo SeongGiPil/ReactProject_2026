@@ -158,7 +158,7 @@ SpoTalk
 
 ### 시연영상
 
-[시연영상 보기](https://drive.google.com/drive/folders/1kXiRPLbECVVQunF_no-tjMvZsYWutml1)
+[시연영상 보기](https://drive.google.com/file/d/12S6DszyUspDSk_I1kXHOdDmsJ9j2aGhI/view?usp=drive_link)
 
 
 ---
